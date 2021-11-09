@@ -1,0 +1,8 @@
+rootProject.name = 'continuations'
+
+include "continuations"
+project(":continuations").projectDir = file("impl")
+//include "continuations-examples"
+//project(":continuations-examples").projectDir = file("examples")
+
+

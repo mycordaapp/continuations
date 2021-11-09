@@ -1,0 +1,26 @@
+dependencies {
+    implementation("com.github.jitpack:gradle-simple:1.0")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+
+    implementation "com.github.mycordaapp:really-simple-serialisation:$rssVersion"
+    implementation "com.github.mycordaapp:simple-event-store:$sesVersion"
+    implementation "com.github.mycordaapp:commons:$commonsVersion"
+    implementation "com.github.mycordaapp:registry:$registryVersion"
+
+    testImplementation("com.natpryce:hamkrest:$hamkrestVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+    testImplementation('org.junit.platform:junit-platform-runner:1.0.0')
+}
+
+test {
+    // set heap size for the test JVM(s)
+    // should be able to keep this quite minimal, as the library is simple
+    minHeapSize = "128m"
+    maxHeapSize = "512m"
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
