@@ -1,4 +1,4 @@
-package mycorda.app.tasks.orchestration
+package mycorda.app.continuations
 
 import mycorda.app.chaos.Chaos
 import mycorda.app.chaos.FailNPercent
