@@ -10,15 +10,16 @@ class ThreeSteps(
     registry: Registry = Registry(),
     continuationKey: String = String.random()
 ) {
-    // setup continuation
+    // setup continuations
     private val factory = registry.geteOrElse(ContinuationFactory::class.java, SimpleContinuationFactory(registry))
     private val continuation = factory.get(continuationKey)
 
-    // setup test support
+    // setup internal test support
     private val chaos = registry.geteOrElse(Chaos::class.java, Chaos(emptyMap(), true))
     private val spy = registry.geteOrElse(Spy::class.java, Spy())
 
     fun exec(startNumber: Int): Int {
+        println("boo")
         // run a sequence of calculations
         val step1Result = continuation.execBlock("step1", 1::class) {
             testDecoration("step1")
@@ -34,7 +35,7 @@ class ThreeSteps(
         }
     }
 
-    // only to control and observer the test double - wouldn't expect this in real code
+    // only to control and spy on the test double - wouldn't expect this in real code
     private fun testDecoration(step: String) {
         spy.spy(step)
         chaos.chaos(step)
