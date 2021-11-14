@@ -4,6 +4,7 @@ dependencies {
 
     implementation "com.github.mycordaapp:really-simple-serialisation:$rssVersion"
     implementation "com.github.mycordaapp:simple-event-store:$sesVersion"
+    implementation "com.github.mycordaapp:simple-kv-store:$sksVersion"
     implementation "com.github.mycordaapp:commons:$commonsVersion"
     implementation "com.github.mycordaapp:registry:$registryVersion"
 

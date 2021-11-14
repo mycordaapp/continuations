@@ -14,21 +14,17 @@ plugins {
     id 'java'
     id 'maven'
     id "org.jetbrains.kotlin.jvm" version "$kotlinVersion"
-    id("org.jetbrains.dokka") version "1.5.30"
+    //i//d("org.jetbrains.dokka") version "1.5.30"
 }
 
 
 allprojects {
-    //version = "0.0.1"  - not needed - will be set by Jitpack based on the tag
 
     repositories {
         mavenCentral()
         maven { url "https://repo.gradle.org/gradle/libs-releases" }
         maven { url "https://jitpack.io" }
 
-        // uncomment for local testing. Please DONT check in with
-        // this enabled
-        //mavenLocal()
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
@@ -43,7 +39,6 @@ subprojects {
     apply plugin: 'maven'
     //apply plugin: 'org.jetbrains.dokka'
 
-
     task sourcesJar(type: Jar, dependsOn: classes) {
         classifier = 'sources'
         from sourceSets.main.allSource
@@ -57,6 +52,22 @@ subprojects {
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
         reports { junitXml.setEnabled(true) }
+
+        // set heap size for the test JVM(s)
+        minHeapSize = "64m"
+        maxHeapSize = "256m"
+
+//        filter {
+//            // causing problems under CircleCI
+//            excludeTestsMatching "mycorda.app.registry.snippet"
+//        }
+
+        testLogging {
+            events "passed", "skipped", "failed"
+            exceptionFormat "full"
+        }
+
+
     }
 
     artifacts {
