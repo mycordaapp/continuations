@@ -3,6 +3,7 @@ package mycorda.app.continuations
 import mycorda.app.registry.Registrar
 import mycorda.app.registry.Registry
 import mycorda.app.ses.EventStore
+import mycorda.app.ses.SimpleEventStore
 import java.lang.Exception
 import java.lang.Long.max
 import java.lang.RuntimeException
@@ -21,7 +22,7 @@ class SimpleContinuationRegistrar : Registrar {
                 registry.store(EventStore::class.java)
             }
         }
-        //registry.store(SimpleScheduler(registry))
+        registry.store(SimpleSchedulerFactory(registry))
         registry.store(SimpleContinuationFactory(registry))
         return registry
     }
@@ -42,12 +43,19 @@ class SimpleScheduler(private val continuation: Continuation) : Scheduler {
     }
 }
 
+class SimpleSchedulerFactory(private val registry: Registry) : SchedulerFactory {
+    private val es = registry.getOrElse(EventStore::class.java, SimpleEventStore())
+    override fun get(continuation: Continuation): Scheduler {
+        return SimpleScheduler(continuation)
+    }
+}
+
 
 class SimpleContinuation(
     private val exceptionStrategy: ContinuationExceptionStrategy = RetryNTimesExceptionStrategy(),
-    registry: Registry
+    private val schedulerFactory: SchedulerFactory
 ) : Continuation {
-    private val scheduler = registry.getOrElse(Scheduler::class.java,SimpleScheduler(this))
+    private val scheduler = schedulerFactory.get(this)
     private val lookup = HashMap<String, Any>()
     override fun <T : Any> execBlock(
         key: String,
@@ -97,9 +105,10 @@ class SimpleContinuation(
  */
 class SimpleContinuationFactory(registry: Registry = Registry()) : ContinuationFactory {
     private val registry = registry.clone() // make a clean copy as registry is mutable
+    private val schedulerFactory = registry.get(SchedulerFactory::class.java)
     private val lookup = HashMap<String, SimpleContinuation>()
     override fun get(continuationKey: String): Continuation {
-        lookup.putIfAbsent(continuationKey, SimpleContinuation(exceptionStrategy(), registry))
+        lookup.putIfAbsent(continuationKey, SimpleContinuation(exceptionStrategy(), schedulerFactory))
         return lookup[continuationKey]!!
     }
 

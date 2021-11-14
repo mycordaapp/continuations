@@ -3,7 +3,6 @@ package mycorda.app.continuations
 
 import mycorda.app.registry.Registry
 import java.lang.Exception
-import java.lang.Long.max
 import kotlin.reflect.KClass
 
 data class ContinuationContext(val attempts: Int = 0)
@@ -37,6 +36,9 @@ interface ContinuationFactory {
     fun exceptionStrategy(): ContinuationExceptionStrategy
 }
 
+interface SchedulerFactory {
+    fun get(continuation: Continuation): Scheduler
+}
 
 
 /**
@@ -54,8 +56,6 @@ interface Scheduler {
     fun <T : Any> schedule(scheduled: Scheduled<T>)
     fun <T : Any> waitFor(key: String): T
 }
-
-
 
 
 class RestartableContinuation(

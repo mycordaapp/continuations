@@ -7,11 +7,12 @@ import mycorda.app.xunitpatterns.spy.Spy
 
 
 class ThreeSteps(
-    registry: Registry = Registry(),
+    registry: Registry = SimpleContinuationRegistrar().register(),
     continuationKey: String = String.random()
 ) {
     // setup continuations
     private val factory = registry.getOrElse(ContinuationFactory::class.java, SimpleContinuationFactory(registry))
+
     private val continuation = factory.get(continuationKey)
 
     // setup internal test support
@@ -19,7 +20,7 @@ class ThreeSteps(
     private val spy = registry.getOrElse(Spy::class.java, Spy())
 
     fun exec(startNumber: Int): Int {
-        println("boo")
+        testDecoration("starting")
         // run a sequence of calculations
         val step1Result = continuation.execBlock("step1", 1::class) {
             testDecoration("step1")

@@ -14,14 +14,14 @@ class ContinuationScenarios {
 
     @Test
     fun `should complete normally with inbuilt Continuation`() {
-        // using inbuilt SimpleContinuationFactory
+        // using inbuilt Factories
         val result = ThreeSteps().exec(10)
         assertThat(result, equalTo(202))
     }
 
     @Test
-    fun `should wire up Continuation using registry`() {
-        val registry = Registry().store(SimpleContinuationFactory())
+    fun `should wire up Continuation using registrar`() {
+        val registry = SimpleContinuationRegistrar().register()
 
         // Continuation provided by registry
         val result = ThreeSteps(registry).exec(10)
@@ -39,13 +39,13 @@ class ContinuationScenarios {
         val spy1 = Spy()
         val result1 = ThreeSteps(registry.clone().store(spy1), continuationId).exec(10)
         assertThat(result1, equalTo(202))
-        assertThat(spy1.secrets(), equalTo(listOf("step1", "step2", "step3")))
+        assertThat(spy1.secrets(), equalTo(listOf("starting", "step1", "step2", "step3")))
 
         // Spy on the second run - all steps have completed, so it just returns the result of step3
         val spy2 = Spy()
         val result2 = ThreeSteps(registry.clone().store(spy2), continuationId).exec(10)
         assertThat(result2, equalTo(202))
-        assertThat(spy2.secrets(), equalTo(emptyList()))
+        assertThat(spy2.secrets(), equalTo(listOf("starting")))
     }
 
     @Test
@@ -68,7 +68,7 @@ class ContinuationScenarios {
         assertThat(result, equalTo(202))
 
         // step2 is present 4 times - three failures and one success
-        assertThat(spy.secrets(), equalTo(listOf("step1", "step2", "step2", "step2", "step2", "step3")))
+        assertThat(spy.secrets(), equalTo(listOf("starting", "step1", "step2", "step2", "step2", "step2", "step3")))
 
     }
 
