@@ -11,12 +11,12 @@ class ThreeSteps(
     continuationKey: String = String.random()
 ) {
     // setup continuations
-    private val factory = registry.geteOrElse(ContinuationFactory::class.java, SimpleContinuationFactory(registry))
+    private val factory = registry.getOrElse(ContinuationFactory::class.java, SimpleContinuationFactory(registry))
     private val continuation = factory.get(continuationKey)
 
     // setup internal test support
-    private val chaos = registry.geteOrElse(Chaos::class.java, Chaos(emptyMap(), true))
-    private val spy = registry.geteOrElse(Spy::class.java, Spy())
+    private val chaos = registry.getOrElse(Chaos::class.java, Chaos(emptyMap(), true))
+    private val spy = registry.getOrElse(Spy::class.java, Spy())
 
     fun exec(startNumber: Int): Int {
         println("boo")

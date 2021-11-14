@@ -3,7 +3,6 @@ package mycorda.app.continuations
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import mycorda.app.chaos.Chaos
-import mycorda.app.chaos.FailNPercent
 import mycorda.app.chaos.FailWithPattern
 import mycorda.app.chaos.Noop
 import mycorda.app.helpers.random
@@ -33,7 +32,7 @@ class ContinuationScenarios {
     fun `should return result of previous run if rerun `() {
         // The basic promise of any continuation. If rerun
         // it will not trigger the block that have already completed
-        val registry = Registry().store(SimpleContinuationFactory())
+        val registry = SimpleContinuationRegistrar().register()
         val continuationId = String.random()
 
         // Spy on the first run
@@ -51,9 +50,7 @@ class ContinuationScenarios {
 
     @Test
     fun `should retry failed steps using retry strategy`() {
-        // By default, SimpleContinuation will retry after an exception
-        // upto 10 times
-        val registry = Registry().store(SimpleContinuationFactory())
+        val registry = SimpleContinuationRegistrar().register()
         val continuationId = String.random()
 
         val chaos = Chaos(
@@ -66,6 +63,7 @@ class ContinuationScenarios {
         val spy = Spy()
 
         // Run with some chaos - step2 will fail 3 times
+        // note, by default, SimpleContinuation will retry after an exception upto 10 times
         val result = ThreeSteps(registry.clone().store(spy).store(chaos), continuationId).exec(10)
         assertThat(result, equalTo(202))
 
