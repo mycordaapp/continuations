@@ -6,7 +6,6 @@ import mycorda.app.chaos.Chaos
 import mycorda.app.chaos.FailWithPattern
 import mycorda.app.chaos.Noop
 import mycorda.app.helpers.random
-import mycorda.app.registry.Registry
 import mycorda.app.xunitpatterns.spy.Spy
 import org.junit.jupiter.api.Test
 

@@ -1,5 +1,6 @@
 package mycorda.app.continuations
 
+import mycorda.app.continuations.events.ScheduledActionCreatedFactory
 import mycorda.app.registry.Registrar
 import mycorda.app.registry.Registry
 import mycorda.app.ses.EventStore
@@ -8,7 +9,6 @@ import java.lang.Exception
 import java.lang.Long.max
 import java.lang.RuntimeException
 import kotlin.reflect.KClass
-
 
 /**
  * Wires up a SimpleContinuation
@@ -19,42 +19,80 @@ class SimpleContinuationRegistrar : Registrar {
             if (strict) {
                 throw RuntimeException("There should be an EventStore class in the registry")
             } else {
-                registry.store(EventStore::class.java)
+                registry.store(SimpleEventStore())
             }
         }
+        registry.store(SimpleSchedulerService(registry))
         registry.store(SimpleSchedulerFactory(registry))
         registry.store(SimpleContinuationFactory(registry))
         return registry
     }
 }
 
-class SimpleScheduler(private val continuation: Continuation) : Scheduler {
-    private val schedules = ArrayList<Scheduled<Any>>()
+class SimpleScheduler(
+    registry: Registry,
+    private val continuation: Continuation
+) : Scheduler {
+    private val schedulerService = registry.get(SchedulerService::class.java)
     override fun <T : Any> schedule(scheduled: Scheduled<T>) {
-        schedules.add(scheduled as Scheduled<Any>)
+        schedulerService.schedule(scheduled)
     }
 
     override fun <T : Any> waitFor(key: String): T {
-        val scheduled = schedules.single { it.key == key }
+        val scheduled = schedulerService.get<T>(key)
         val delayedRetry = max(scheduled.scheduledTime - System.currentTimeMillis(), 1)
         Thread.sleep(delayedRetry)
-        schedules.remove(scheduled)
+        schedulerService.completed(scheduled.key)
         return continuation.execBlock(key, scheduled.clazz, scheduled.block, scheduled.ctx) as T
     }
 }
 
 class SimpleSchedulerFactory(private val registry: Registry) : SchedulerFactory {
-    private val es = registry.getOrElse(EventStore::class.java, SimpleEventStore())
     override fun get(continuation: Continuation): Scheduler {
-        return SimpleScheduler(continuation)
+        return SimpleScheduler(registry, continuation)
     }
+}
+
+
+interface SchedulerService {
+    fun <T : Any> schedule(action: Scheduled<T>)
+
+    fun <T : Any> get(key: String): Scheduled<T>
+
+    fun completed(key: String)
+}
+
+
+class SimpleSchedulerService(registry: Registry) : SchedulerService {
+    private val es = registry.get(EventStore::class.java)
+    private val schedules = ArrayList<Scheduled<Any>>()
+
+    override fun <T : Any> schedule(action: Scheduled<out T>) {
+        // create a persistent event for recovery
+        es.store(ScheduledActionCreatedFactory.create(action))
+        schedules.add(action)
+    }
+
+    override fun <T : Any> get(key: String): Scheduled<T> {
+        return schedules.single { it.key == key } as Scheduled<T>
+    }
+
+    override fun completed(key: String) {
+        schedules.removeIf { it.key == key }
+    }
+
 }
 
 
 class SimpleContinuation(
     private val exceptionStrategy: ContinuationExceptionStrategy = RetryNTimesExceptionStrategy(),
-    private val schedulerFactory: SchedulerFactory
+    schedulerFactory: SchedulerFactory
 ) : Continuation {
+    constructor(registry: Registry) : this(
+        registry.getOrElse(ContinuationExceptionStrategy::class.java, RetryNTimesExceptionStrategy()),
+        registry.get(SchedulerFactory::class.java)
+    )
+
     private val scheduler = schedulerFactory.get(this)
     private val lookup = HashMap<String, Any>()
     override fun <T : Any> execBlock(
