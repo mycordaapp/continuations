@@ -1,11 +1,7 @@
 package mycorda.app.continuations
 
-import mycorda.app.chaos.Chaos
-import mycorda.app.chaos.FailNPercent
-import mycorda.app.chaos.Noop
-import mycorda.app.helpers.random
+
 import mycorda.app.registry.Registry
-import mycorda.app.xunitpatterns.spy.Spy
 import java.lang.Exception
 import java.lang.Long.max
 import kotlin.reflect.KClass
@@ -15,7 +11,6 @@ data class ContinuationContext(val attempts: Int = 0)
 /**
  * The basic definition of a Continuation. A block of code that
  * is associated with a unique (within the Continuation)
- *
  */
 interface Continuation {
     fun <T : Any> execBlock(
@@ -58,6 +53,9 @@ class SimpleContinuationFactory(registry: Registry = Registry()) : ContinuationF
     }
 }
 
+/**
+ * Something that can be scheduled to run at some point in the future
+ */
 data class Scheduled<out T : Any>(
     val key: String,
     val ctx: ContinuationContext,
@@ -85,6 +83,7 @@ class SimpleScheduler(private val continuation: Continuation) : Scheduler {
         return continuation.execBlock(key, scheduled.clazz, scheduled.block, scheduled.ctx) as T
     }
 }
+
 
 
 class SimpleContinuation(
@@ -135,6 +134,58 @@ class SimpleContinuation(
         }
     }
 }
+
+
+
+class RestartableContinuation(
+    registry: Registry = Registry(),
+    private val exceptionStrategy: ContinuationExceptionStrategy = RetryNTimesExceptionStrategy()
+) : Continuation {
+    private val scheduler = registry.geteOrElse(Scheduler::class.java, SimpleScheduler(this))
+    private val lookup = HashMap<String, Any>()
+    override fun <T : Any> execBlock(
+        key: String,
+        clazz: KClass<out T>,
+        block: (ctx: ContinuationContext) -> T,
+        ctx: ContinuationContext
+    ): T {
+        if (!lookup.containsKey(key)) {
+            // step has not run successfully before
+
+            try {
+                val result = block.invoke(ctx)
+                lookup[key] = result
+                return result
+            } catch (ex: Exception) {
+                val retry = exceptionStrategy.handle(ctx, ex)
+                when (retry) {
+                    is ImmediateRetry -> {
+                        if (retry.maxAttempts >= ctx.attempts) {
+                            return this.execBlock(key, clazz, block, ctx)
+                        }
+                    }
+                    is DelayedRetry -> {
+                        if (retry.maxAttempts >= ctx.attempts) {
+                            val scheduled = Scheduled(key, ctx, clazz, block)
+                            scheduler.schedule(scheduled)
+                            return scheduler.waitFor(key)
+                        }
+                    }
+                    is DontRetry -> {
+                        // todo - log before throwing
+                        throw ex
+                    }
+                }
+                // what to do here ?
+                throw ex
+            }
+        } else {
+            // step has run successfully and can be skipped
+            return lookup[key] as T
+        }
+    }
+}
+
 
 /**
  * A RetryStrategy holds the newContext (that will be invoked on the
@@ -192,96 +243,4 @@ class RetryNTimesExceptionStrategy(
 }
 
 
-class ThreeStepClass(
-    registry: Registry = Registry(),
-    continuationKey: String = String.random()
-) {
-    // setup continuation
-    private val factory = registry.geteOrElse(ContinuationFactory::class.java, SimpleContinuationFactory(registry))
-    private val continuation = factory.get(continuationKey)
 
-    // setup test support
-    private val chaos = registry.geteOrElse(Chaos::class.java, Chaos(emptyMap(), true))
-    private val spy = registry.geteOrElse(Spy::class.java, Spy())
-
-    fun exec(startNumber: Int): Int {
-        // run a sequence of calculations
-        val step1Result = continuation.execBlock("step1", 1::class) {
-            testDecoration("step1")
-            startNumber * startNumber
-        }
-        val step2Result = continuation.execBlock("step2", 1::class) {
-            testDecoration("step2")
-            step1Result + 1
-        }
-        return continuation.execBlock("step3", 1::class) {
-            testDecoration("step3")
-            step2Result + step2Result
-        }
-    }
-
-    // only to control and observer the test double - wouldn't expect this in real code
-    private fun testDecoration(step: String) {
-        spy.spy(step)
-        chaos.chaos(step)
-    }
-}
-
-fun main() {
-
-    // no chaos, inbuilt continuation
-    simplest()
-
-    // no chaos, continuation provided by registry
-    continuationInRegistry()
-
-    // step 2 fails, then we retry the continuation to completion
-    failStep2ThenRetryContinuation()
-
-}
-
-private fun failStep2ThenRetryContinuation() {
-    // 1 - setup
-    val key = String.random()
-    val chaos = Chaos(
-        mapOf(
-            "step1" to listOf(Noop()),
-            "step2" to listOf(FailNPercent(100)),
-            "step3" to listOf(Noop()),
-        ),
-        true
-    )
-    val spy = Spy()
-    val continuationFactory = SimpleContinuationFactory()
-
-    // 2 - run continuation - should fail on step 2
-    try {
-        ThreeStepClass(
-            registry = Registry().store(continuationFactory).store(chaos).store(spy),
-            continuationKey = key
-        ).exec(10)
-    } catch (ex: Exception) {
-    }
-
-    // 3 - run continuation again - should skip step 1 and complete
-    val result = ThreeStepClass(
-        registry = Registry().store(continuationFactory).store(spy),
-        continuationKey = key
-    ).exec(10)
-    println(result)
-
-    // 4 - spy to see that steps are executed as expected - step1 should be skipped
-    println(spy.secrets())
-}
-
-private fun continuationInRegistry() {
-    // no chaos, continuation provided by registry
-    val result = ThreeStepClass(Registry().store(SimpleContinuation())).exec(10)
-    println(result)
-}
-
-private fun simplest() {
-    // no chaos, inbuilt continuation
-    val result = ThreeStepClass().exec(10)
-    println(result)
-}

@@ -65,7 +65,7 @@ class ContinuationScenarios {
         )
         val spy = Spy()
 
-        // Run with some chaos - step2 will fail 3 time
+        // Run with some chaos - step2 will fail 3 times
         val result = ThreeSteps(registry.clone().store(spy).store(chaos), continuationId).exec(10)
         assertThat(result, equalTo(202))
 
