@@ -8,11 +8,11 @@ import mycorda.app.xunitpatterns.spy.Spy
 
 class ThreeSteps(
     registry: Registry = SimpleContinuationRegistrar().register(),
-    continuationKey: String = String.random()
+    continuationId: ContinuationId = ContinuationId.random()
 ) {
     // setup continuations
     private val factory = registry.get(ContinuationFactory::class.java)
-    private val continuation = factory.get(continuationKey)
+    private val continuation = factory.get(continuationId)
 
     // setup internal test support
     private val chaos = registry.getOrElse(Chaos::class.java, Chaos(emptyMap(), true))

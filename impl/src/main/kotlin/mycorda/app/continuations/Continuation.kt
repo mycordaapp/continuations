@@ -1,9 +1,58 @@
 package mycorda.app.continuations
 
+import mycorda.app.types.StringList
 import java.lang.Exception
+import java.util.*
 import kotlin.reflect.KClass
 
-data class ContinuationContext(val attempts: Int = 0)
+
+data class ContinuationContext(
+    /**
+     * The number of previous attempts.
+     */
+    val attempts: Int = 0,
+    /**
+     * A stack like list of the error messages (i.e. latest is at the top).
+     * Handlers can use this to help fine tune the retry logic. By default its set to
+     * the exception message.
+     */
+    val errorStack: StringList = StringList(emptyList())
+)
+
+/**
+ * A type safe Id associated with a continuation. Current it is
+ * internally just a UUID, but this could change
+ */
+class ContinuationId private constructor(private val id: String) {
+    fun id(): String = id
+
+    companion object {
+        fun random(): ContinuationId {
+            return ContinuationId(UUID.randomUUID().toString())
+        }
+
+        fun fromString(id: String): ContinuationId {
+            UUID.fromString(id) // checks it a UUID Id
+            return ContinuationId(id)
+        }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return if (other is ContinuationId) {
+            this.id() == other.id()
+        } else false
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
+
+}
+
+
+interface Restartable<I, O> {
+    fun exec(input: I): O
+}
 
 /**
  * The basic definition of a Continuation. A block of code that
@@ -30,7 +79,7 @@ interface Continuation {
  * Abstract building and managing a continuation
  */
 interface ContinuationFactory {
-    fun get(continuationKey: String): Continuation
+    fun get(continuationId: ContinuationId): Continuation
     fun exceptionStrategy(): ContinuationExceptionStrategy
 }
 
@@ -133,9 +182,18 @@ data class DontRetry(private val newContext: ContinuationContext) : RetryStrateg
  * and the ContinuationContext.
  */
 interface ContinuationExceptionStrategy {
+    /**
+     * Handle the exception and apply the appropriate RetryStrategy
+     */
     fun handle(ctx: ContinuationContext, ex: Exception): RetryStrategy
-    fun incrementRetries(ctx: ContinuationContext): ContinuationContext {
-        return ctx.copy(attempts = ctx.attempts + 1)
+
+    /**
+     * A helper to run the standard logic for keeping track of the
+     */
+    fun incrementRetriesHelper(ctx: ContinuationContext, ex: Exception): ContinuationContext {
+        val newStack = StringList(ctx.errorStack)
+        newStack.add(0, "${ex::class.qualifiedName}: ${ex.message!!}")
+        return ctx.copy(attempts = ctx.attempts + 1, errorStack = newStack)
     }
 }
 
@@ -156,8 +214,8 @@ class RetryNTimesExceptionStrategy(
         ctx: ContinuationContext,
         ex: Exception
     ): RetryStrategy {
-        val scheduledTime = System.currentTimeMillis() + (ctx.attempts * initialDelayMs)
-        return DelayedRetry(incrementRetries(ctx), scheduledTime, maxRetries)
+        val scheduledTime = System.currentTimeMillis() + ((ctx.attempts + 1) * initialDelayMs)
+        return DelayedRetry(incrementRetriesHelper(ctx, ex), scheduledTime, maxRetries)
     }
 }
 

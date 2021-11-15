@@ -144,10 +144,10 @@ class SimpleContinuation(
 class SimpleContinuationFactory(registry: Registry = Registry()) : ContinuationFactory {
     private val registry = registry.clone() // make a clean copy as registry is mutable
     private val schedulerFactory = registry.get(SchedulerFactory::class.java)
-    private val lookup = HashMap<String, SimpleContinuation>()
-    override fun get(continuationKey: String): Continuation {
-        lookup.putIfAbsent(continuationKey, SimpleContinuation(exceptionStrategy(), schedulerFactory))
-        return lookup[continuationKey]!!
+    private val lookup = HashMap<ContinuationId, SimpleContinuation>()
+    override fun get(continuationId: ContinuationId): Continuation {
+        lookup.putIfAbsent(continuationId, SimpleContinuation(exceptionStrategy(), schedulerFactory))
+        return lookup[continuationId]!!
     }
 
     override fun exceptionStrategy(): ContinuationExceptionStrategy {

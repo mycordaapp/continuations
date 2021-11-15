@@ -1,4 +1,5 @@
 # Design Notes
+
 [home](../README.md)
 
 ## What is a Continuation
@@ -50,8 +51,8 @@ class ThreeSteps(
 }
 ```
 
-Taking a simple example, when `step 1` is completed it results are stored in key-value store and fact that the step has
-completed is also stored. So in the event of a restart the associated block
+Taking a simple example, when `step 1` is completed it results are stored in a key-value store and the fact that the
+step has completed is also stored. So in the event of a restart the associated block
 
 ```kotlin
 continuation.execBlock("step1", 1::class) {
@@ -64,7 +65,35 @@ will be skipped and replaced to the stored value.
 
 Any data stored has the restriction that it must be serialisable
 by [Really Simple Serialisation(rss)](https://github.com/mycordaapp/really-simple-serialisation). The same restrictions
-is also applied to [Tasks](https://github.com/mycordaapp/tasks/blob/master/README.md).
+is also applied to [Tasks](https://github.com/mycordaapp/tasks/blob/master/README.md). See below for more detail.
+
+With the basic building block in place, there are several types of useful behaviours to build on in.
+
+* Exception handling and retries.
+* Restarting a continuation
+* ...
+
+## Exceptions and Retries
+
+This is essentially a case of wrapping `execBlock` in a handler. There is a prebuilt strategy built
+around `ContinuationExceptionStrategy` and `RetryStategy`. The default handler explains it well 
+
+```kotlin
+class RetryNTimesExceptionStrategy(
+    private val maxRetries: Int = 10,
+    private val initialDelayMs: Long = 10
+) : ContinuationExceptionStrategy {
+    override fun handle(
+        ctx: ContinuationContext,
+        ex: Exception
+    ): RetryStrategy {
+        val scheduledTime = System.currentTimeMillis() + ((ctx.attempts + 1) * initialDelayMs)
+        return DelayedRetry(incrementRetriesHelper(ctx, ex), scheduledTime, maxRetries)
+    }
+}
+```
+
+_TODO - show how this is wired up_ 
 
 ## Serialisation
 
@@ -72,5 +101,7 @@ TODO - Some notes on rss
 
 ## Upgrades
 
-TODO - note on how to manage upgrades unlike Corda flows, this should be possible , but need to work through the
-scenarios 
+_TODO - note on how to manage upgrades unlike Corda flows, this should be possible; there is no fancy serialisation
+logic and upgrade specific behaviour can be injected_
+
+_But need to work through the scenarios_

@@ -32,7 +32,7 @@ class ContinuationScenarios {
         // The basic promise of any continuation. If rerun
         // it will not trigger the block that have already completed
         val registry = SimpleContinuationRegistrar().register()
-        val continuationId = String.random()
+        val continuationId = ContinuationId.random()
 
         // Spy on the first run
         val spy1 = Spy()
@@ -50,7 +50,7 @@ class ContinuationScenarios {
     @Test
     fun `should retry failed steps using retry strategy`() {
         val registry = SimpleContinuationRegistrar().register()
-        val continuationId = String.random()
+        val continuationId = ContinuationId.random()
 
         val chaos = Chaos(
             mapOf(
