@@ -1,7 +1,6 @@
 package mycorda.app.continuations
 
 import mycorda.app.chaos.Chaos
-import mycorda.app.helpers.random
 import mycorda.app.registry.Registry
 import mycorda.app.xunitpatterns.spy.Spy
 
@@ -9,7 +8,7 @@ import mycorda.app.xunitpatterns.spy.Spy
 class ThreeSteps(
     registry: Registry = SimpleContinuationRegistrar().register(),
     continuationId: ContinuationId = ContinuationId.random()
-) {
+) : Continuable<Int, Int> {
     // setup continuations
     private val factory = registry.get(ContinuationFactory::class.java)
     private val continuation = factory.get(continuationId)
@@ -18,7 +17,7 @@ class ThreeSteps(
     private val chaos = registry.getOrElse(Chaos::class.java, Chaos(emptyMap(), true))
     private val spy = registry.getOrElse(Spy::class.java, Spy())
 
-    fun exec(startNumber: Int): Int {
+    override fun exec(startNumber: Int): Int {
         testDecoration("starting")
         // run a sequence of calculations
         val step1Result = continuation.execBlock("step1", 1::class) {

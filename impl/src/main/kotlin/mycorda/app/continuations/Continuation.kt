@@ -20,7 +20,7 @@ data class ContinuationContext(
 )
 
 /**
- * A type safe Id associated with a continuation. Current it is
+ * A type safe Id associated with a continuation. Currently it is
  * internally just a UUID, but this could change
  */
 class ContinuationId private constructor(private val id: String) {
@@ -50,7 +50,7 @@ class ContinuationId private constructor(private val id: String) {
 }
 
 
-interface Restartable<I, O> {
+interface Continuable<I, O> {
     fun exec(input: I): O
 }
 
