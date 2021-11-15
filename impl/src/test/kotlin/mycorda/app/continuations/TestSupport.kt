@@ -11,8 +11,7 @@ class ThreeSteps(
     continuationKey: String = String.random()
 ) {
     // setup continuations
-    private val factory = registry.getOrElse(ContinuationFactory::class.java, SimpleContinuationFactory(registry))
-
+    private val factory = registry.get(ContinuationFactory::class.java)
     private val continuation = factory.get(continuationKey)
 
     // setup internal test support

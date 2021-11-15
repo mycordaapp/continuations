@@ -28,6 +28,9 @@ This library needs to solve three basic problems:
     - when to restart (scheduling)
     - when to give up (dead letter)
 
+See [Design Notes](./docs/design-notes.md)
+
+
 ## Dependencies
 
 As with everything in [myCorda dot App](https://mycorda.app), this library has minimal dependencies:
