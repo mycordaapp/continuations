@@ -1,6 +1,5 @@
 package  mycorda.app.continuations
 
-
 import mycorda.app.registry.Registry
 import java.lang.Exception
 import java.lang.RuntimeException
@@ -89,7 +88,7 @@ class ContinuableFactory(private val registry: Registry = SimpleContinuationRegi
         continuationId: ContinuationId = ContinuationId.random()
     ): Continuable<I, O> {
         val continuableName: String = continuableClazz.qualifiedName!!
-        val continuable = createInstance<I,O>(continuableName, continuationId)
+        val continuable = createInstance<I, O>(continuableName, continuationId)
         if (continuable is Continuable<*, *>) {
             @Suppress("UNCHECKED_CAST")
             return continuable as Continuable<I, O>
@@ -97,6 +96,4 @@ class ContinuableFactory(private val registry: Registry = SimpleContinuationRegi
             throw RuntimeException("${Continuable::class.qualifiedName} is not a Continuable")
         }
     }
-
-
 }

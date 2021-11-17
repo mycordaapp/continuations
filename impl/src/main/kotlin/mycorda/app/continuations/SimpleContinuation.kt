@@ -124,6 +124,7 @@ class SimpleContinuation(
                         }
                     }
                     is DontRetry -> {
+                        println("opps")
                         // todo - log before throwing
                         throw ex
                     }
@@ -141,7 +142,7 @@ class SimpleContinuation(
 /**
  * Create a SimpleContinuation
  */
-class SimpleContinuationFactory(registry: Registry = Registry()) : ContinuationFactory {
+class SimpleContinuationFactory(registry: Registry) : ContinuationFactory {
     private val registry = registry.clone() // make a clean copy as registry is mutable
     private val schedulerFactory = registry.get(SchedulerFactory::class.java)
     private val lookup = HashMap<ContinuationId, SimpleContinuation>()

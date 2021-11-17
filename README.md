@@ -39,8 +39,6 @@ As with everything in [myCorda dot App](https://mycorda.app), this library has m
 * Java 11
 * The object [Registry](https://github.com/mycordaapp/registry#readme)
 * The [Commons](https://github.com/mycordaapp/commons#readme) module
-* The [Commons](https://github.com/mycordaapp/commons#readme) module
-
 * The [Really Simple Serialisation(rss)](https://github.com/mycordaapp/really-simple-serialisation#readme) module
     - [Jackson](https://github.com/FasterXML/jackson) for JSON serialisation
 
