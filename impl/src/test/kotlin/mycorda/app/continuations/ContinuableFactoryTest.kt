@@ -8,8 +8,8 @@ class ContinuableFactoryTest {
 
     @Test
     fun `should register and create`() {
-        //val registry = SimpleContinuationRegistrar().register()
-        val factory = ContinuableFactory()
+        val registry = SimpleContinuationRegistrar().register()
+        val factory = ContinuableFactory(registry)
 
         factory.register(ContinuableRegistration(ThreeSteps::class))
 

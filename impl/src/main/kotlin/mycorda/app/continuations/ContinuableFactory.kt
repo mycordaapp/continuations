@@ -7,7 +7,7 @@ import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 
 
-class ContinuableFactory(private val registry: Registry = SimpleContinuationRegistrar().register()) {
+class ContinuableFactory(private val registry: Registry) {
     private val lookup = HashMap<String, KClass<out Continuable<*, *>>>()
 
     /**

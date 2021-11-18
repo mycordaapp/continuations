@@ -25,6 +25,7 @@ class SimpleContinuationRegistrar : Registrar {
         registry.store(SimpleSchedulerService(registry))
         registry.store(SimpleSchedulerFactory(registry))
         registry.store(SimpleContinuationFactory(registry))
+        registry.store(ContinuableFactory(registry))
         return registry
     }
 }
