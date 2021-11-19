@@ -5,6 +5,8 @@ import mycorda.app.registry.Registrar
 import mycorda.app.registry.Registry
 import mycorda.app.ses.EventStore
 import mycorda.app.ses.SimpleEventStore
+import mycorda.app.sks.SKS
+import mycorda.app.sks.SimpleKVStore
 import java.lang.Exception
 import java.lang.Long.max
 import java.lang.RuntimeException
@@ -20,6 +22,13 @@ class SimpleContinuationRegistrar : Registrar {
                 throw RuntimeException("There should be an EventStore class in the registry")
             } else {
                 registry.store(SimpleEventStore())
+            }
+        }
+        if (!registry.contains(SKS::class.java)) {
+            if (strict) {
+                throw RuntimeException("There should be a Simple Key Value Store (SKS)  class in the registry")
+            } else {
+                registry.store(SimpleKVStore())
             }
         }
         registry.store(SimpleSchedulerService(registry))

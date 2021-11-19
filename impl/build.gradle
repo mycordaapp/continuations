@@ -1,6 +1,7 @@
 dependencies {
     implementation("com.github.jitpack:gradle-simple:1.0")
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 
     implementation "com.github.mycordaapp:really-simple-serialisation:$rssVersion"
     implementation "com.github.mycordaapp:simple-event-store:$sesVersion"

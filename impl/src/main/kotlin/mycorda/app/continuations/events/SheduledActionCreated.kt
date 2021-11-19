@@ -22,9 +22,14 @@ object ScheduledActionCreatedFactory : EventFactory {
             clazzName = action.clazz.qualifiedName!!,
             scheduledTime = action.scheduledTime
         )
+        return create(payload)
+    }
+
+    fun create(payload: ScheduledActionCreated): Event {
+
         return Event(
             type = "mycorda.app.continuations.events.ScheduledActionCreated",
-            aggregateId = action.key,
+            aggregateId = payload.key,
             payload = payload
         )
     }

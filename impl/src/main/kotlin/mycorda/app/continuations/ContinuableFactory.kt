@@ -6,30 +6,39 @@ import java.lang.RuntimeException
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 
+data class ContinuableRegistration(
+    val continuable: KClass<out Continuable<*, *>>,
+    val asContinuable: KClass<out Continuable<*, *>> = continuable
+)
 
+interface ContinuableRegistrations : Iterable<ContinuableRegistration>
+
+/**
+ * Register and create instances of Continuables by name or clazz
+ */
 class ContinuableFactory(private val registry: Registry) {
     private val lookup = HashMap<String, KClass<out Continuable<*, *>>>()
 
     /**
-     * Register using a list of  TaskRegistrations
+     * Register using a list of ContinuableRegistrations
      */
-    fun register(taskRegistrations: ContinuableRegistrations): ContinuableFactory {
-        taskRegistrations.forEach { register(it) }
+    fun register(continuableRegistrations: ContinuableRegistrations): ContinuableFactory {
+        continuableRegistrations.forEach { register(it) }
         return this
     }
 
     /**
-     * Register using a TaskRegistration
+     * Register using a ContinuableRegistration
      */
-    fun register(taskRegistration: ContinuableRegistration): ContinuableFactory {
-        register(taskRegistration.continuable, taskRegistration.asContinuable)
+    fun register(continuableRegistration: ContinuableRegistration): ContinuableFactory {
+        register(continuableRegistration.continuable, continuableRegistration.asContinuable)
         return this
     }
 
     /**
      * Register the class, taking the class name as the registered name
-     * - task = the implementingClass
-     * - asTask = the interface (if different)
+     * - continuable = the implementingClass
+     * - asContinuable = the interface (if different)
      */
     fun register(
         continuable: KClass<out Continuable<*, *>>,
@@ -46,7 +55,7 @@ class ContinuableFactory(private val registry: Registry) {
     }
 
     /**
-     * Create an instance of a Task by fully qualified name. This
+     * Create an instance of a Continuable by fully qualified name. This
      * is the "core" factory method, but in most cases one of the
      * more type safe variants will result in cleaner code.
      *
@@ -62,6 +71,7 @@ class ContinuableFactory(private val registry: Registry) {
 
         // try with Registry
         clazz.constructors.forEach {
+            println(it)
             if (it.parameters.size == 2) {
                 @Suppress("UNCHECKED_CAST")
                 val p1Clazz = it.parameters[0].type.classifier as KClass<Any>
@@ -77,10 +87,9 @@ class ContinuableFactory(private val registry: Registry) {
                     }
                 }
             }
-
         }
 
-        throw RuntimeException("Couldn't find a suitable constructor for task: `$qualifiedName`")
+        throw RuntimeException("Couldn't find a suitable constructor for Continuable: `$qualifiedName`")
     }
 
     fun <I, O> createInstance(

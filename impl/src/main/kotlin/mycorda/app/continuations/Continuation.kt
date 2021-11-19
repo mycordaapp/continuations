@@ -47,12 +47,11 @@ class ContinuationId private constructor(private val id: String) {
         return id.hashCode()
     }
 
+    override fun toString(): String = id
+
 }
 
 
-interface Continuable<I, O> {
-    fun exec(input: I): O
-}
 
 /**
  * The basic definition of a Continuation. A block of code that
