@@ -1,10 +1,7 @@
 package mycorda.app.continuations
 
 import mycorda.app.clock.PlatformTimer
-import mycorda.app.continuations.events.ContinuationCompletedFactory
-import mycorda.app.continuations.events.ContinuationStartedFactory
-import mycorda.app.continuations.events.ScheduledActionCreated
-import mycorda.app.continuations.events.ScheduledActionCreatedFactory
+import mycorda.app.continuations.events.*
 import mycorda.app.registry.Registry
 import mycorda.app.ses.AggregateIdQuery
 import mycorda.app.ses.EventStore
@@ -14,10 +11,11 @@ import mycorda.app.sks.SKSValue
 import mycorda.app.sks.SKSValueType
 import mycorda.app.sks.SimpleKVStore
 import mycorda.app.types.UniqueId
+import java.lang.RuntimeException
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
-class ContinuableWorker(private val registry: Registry) {
+class ContinuableWorker(registry: Registry) {
     private data class Scheduled(
         val continuable: String,
         val id: ContinuationId,
@@ -56,11 +54,12 @@ class ContinuableWorker(private val registry: Registry) {
         }
     }
 
-    fun result(continuable: String, id: ContinuationId): Any {
-        val x = factory.createInstance<Any, Any>(continuable, id)
-
-        // todo - should be able to check the result of a continuation
-        return "wibble"
+    fun <O> result(id: ContinuationId): O {
+        if (status(id) == ContinuationStatus.Completed) {
+            return kv.getDeserialised<O>(UniqueId(id.id()))
+        } else {
+            throw RuntimeException("No result available")
+        }
     }
 
     fun status(id: ContinuationId): ContinuationStatus {
@@ -75,6 +74,9 @@ class ContinuableWorker(private val registry: Registry) {
                 }
                 if (ev.type == ContinuationCompletedFactory.eventType() && status == ContinuationStatus.Running) {
                     status = ContinuationStatus.Completed
+                }
+                if (ev.type == ContinuationFailedFactory.eventType()) {
+                    status = ContinuationStatus.Failed
                 }
             }
         }
@@ -118,15 +120,18 @@ class WorkerThread(
     Runnable {
     override fun run() {
         try {
+            Thread.currentThread().name = "WorkerThread - $continuable - $id";
             val continuation = factory.createInstance<Any, Any>(continuable, id)
             ew.store(ContinuationStartedFactory.create(id))
-            val result = continuation.exec(input) as Any
-            kv.put(UniqueId(id.toString()), SKSValue(result, SKSValueType.Serialisable))
+            val result = continuation.exec(input)
+            kv.put(UniqueId(id.id()), SKSValue(result, SKSValueType.Serialisable))
             ew.store(ContinuationCompletedFactory.create(id))
+        } catch (ie: InterruptedException) {
+            // should we have custom logic for the thread problems ?
+            ew.store(ContinuationFailedFactory.create(id, ie))
         } catch (t: Throwable) {
-            println(t)
+            ew.store(ContinuationFailedFactory.create(id, t))
         }
-
     }
 
 }

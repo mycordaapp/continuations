@@ -34,6 +34,9 @@ class ContinuationWorkerTest {
         registry.get(EventStore::class.java).read(EverythingQuery).forEach {
             println(it)
         }
+
+        Thread.sleep(100)
+        println(worker.result<Int>(id))
     }
 
     fun waitForEvent(es: EventReader, query: EventQuery) {

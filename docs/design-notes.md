@@ -17,7 +17,7 @@ the [Chaos](https://github.com/mycordaapp/commons/blob/master/docs/chaos.md) lib
 class ThreeSteps(
     registry: Registry = SimpleContinuationRegistrar().register(),
     continuationKey: String = String.random()
-) {
+) : Continuable<Int, Int> {
     // setup continuations
     private val factory = registry.get(ContinuationFactory::class.java)
     private val continuation = factory.get(continuationKey)
@@ -26,7 +26,7 @@ class ThreeSteps(
     private val chaos = registry.getOrElse(Chaos::class.java, Chaos(emptyMap(), true))
     private val spy = registry.getOrElse(Spy::class.java, Spy())
 
-    fun exec(startNumber: Int): Int {
+    override fun exec(startNumber: Int): Int {
         testDecoration("starting")
         // run a sequence of calculations
         val step1Result = continuation.execBlock("step1", 1::class) {
@@ -76,7 +76,7 @@ With the basic building block in place, there are several types of useful behavi
 ## Exceptions and Retries
 
 This is essentially a case of wrapping `execBlock` in a handler. There is a prebuilt strategy built
-around `ContinuationExceptionStrategy` and `RetryStategy`. The default handler explains it well 
+around `ContinuationExceptionStrategy` and `RetryStategy`. The default handler explains it well
 
 ```kotlin
 class RetryNTimesExceptionStrategy(
@@ -93,7 +93,7 @@ class RetryNTimesExceptionStrategy(
 }
 ```
 
-_TODO - show how this is wired up_ 
+_TODO - show how this is wired up_
 
 ## Serialisation
 

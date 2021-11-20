@@ -5,6 +5,7 @@ import mycorda.app.continuations.Scheduled
 import mycorda.app.ses.Event
 import mycorda.app.ses.EventFactory
 
+
 data class ScheduledActionCreated(
     val key: String,
     val ctx: ContinuationContext,
@@ -13,6 +14,7 @@ data class ScheduledActionCreated(
 )
 
 object ScheduledActionCreatedFactory : EventFactory {
+
 
     fun create(action: Scheduled<Any>): Event {
 

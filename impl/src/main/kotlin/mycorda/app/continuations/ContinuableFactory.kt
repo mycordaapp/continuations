@@ -60,6 +60,7 @@ class ContinuableFactory(private val registry: Registry) {
      * more type safe variants will result in cleaner code.
      *
      */
+    @Suppress("UNCHECKED_CAST")
     fun <I, O> createInstance(
         qualifiedName: String,
         continuationId: ContinuationId = ContinuationId.random()
@@ -71,9 +72,7 @@ class ContinuableFactory(private val registry: Registry) {
 
         // try with Registry
         clazz.constructors.forEach {
-            println(it)
             if (it.parameters.size == 2) {
-                @Suppress("UNCHECKED_CAST")
                 val p1Clazz = it.parameters[0].type.classifier as KClass<Any>
                 val p2Clazz = it.parameters[1].type.classifier as KClass<Any>
 
@@ -97,12 +96,6 @@ class ContinuableFactory(private val registry: Registry) {
         continuationId: ContinuationId = ContinuationId.random()
     ): Continuable<I, O> {
         val continuableName: String = continuableClazz.qualifiedName!!
-        val continuable = createInstance<I, O>(continuableName, continuationId)
-        if (continuable is Continuable<*, *>) {
-            @Suppress("UNCHECKED_CAST")
-            return continuable as Continuable<I, O>
-        } else {
-            throw RuntimeException("${Continuable::class.qualifiedName} is not a Continuable")
-        }
+        return createInstance(continuableName, continuationId)
     }
 }

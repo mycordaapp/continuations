@@ -18,6 +18,5 @@ object ContinuationCompletedFactory : EventFactory {
     fun eventType(): String = "mycorda.app.continuations.events.ContinuationCompleted"
 
     fun typeFilter() : EventQuery = EventTypeQuery(eventType())
-
 }
 
