@@ -3,8 +3,6 @@ package mycorda.app.continuations.events
 import mycorda.app.continuations.ContinuationId
 import mycorda.app.ses.Event
 import mycorda.app.ses.EventFactory
-import mycorda.app.ses.EventQuery
-import mycorda.app.ses.EventTypeQuery
 
 data class ContinuationFailed(val exception: String, val message: String)
 
@@ -21,9 +19,7 @@ object ContinuationFailedFactory : EventFactory {
         )
     }
 
-    fun eventType(): String = "mycorda.app.continuations.events.ContinuationFailed"
-
-    fun typeFilter(): EventQuery = EventTypeQuery(eventType())
+    override fun eventType(): String = "mycorda.app.continuations.events.ContinuationFailed"
 
 }
 

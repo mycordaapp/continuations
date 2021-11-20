@@ -30,10 +30,12 @@ object ScheduledActionCreatedFactory : EventFactory {
     fun create(payload: ScheduledActionCreated): Event {
 
         return Event(
-            type = "mycorda.app.continuations.events.ScheduledActionCreated",
+            type = eventType(),
             aggregateId = payload.key,
             payload = payload
         )
     }
+
+    override fun eventType(): String = "mycorda.app.continuations.events.ScheduledActionCreated"
 
 }

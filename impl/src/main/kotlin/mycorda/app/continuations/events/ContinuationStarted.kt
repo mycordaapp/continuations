@@ -14,6 +14,6 @@ object ContinuationStartedFactory : EventFactory {
         )
     }
 
-    fun eventType(): String = "mycorda.app.continuations.events.ContinuationStarted"
+    override fun eventType(): String = "mycorda.app.continuations.events.ContinuationStarted"
 }
 

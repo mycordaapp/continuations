@@ -53,7 +53,7 @@ class SimpleScheduler(
         val delayedRetry = max(scheduled.scheduledTime - System.currentTimeMillis(), 1)
         Thread.sleep(delayedRetry)
         schedulerService.completed(scheduled.key)
-        return continuation.execBlock(key, scheduled.clazz, scheduled.block, scheduled.ctx) as T
+        return continuation.execBlock(key, scheduled.clazz, scheduled.block, scheduled.ctx)
     }
 }
 
