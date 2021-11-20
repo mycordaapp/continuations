@@ -4,7 +4,7 @@ import mycorda.app.continuations.events.ScheduledActionCreatedFactory
 import mycorda.app.registry.Registrar
 import mycorda.app.registry.Registry
 import mycorda.app.ses.EventStore
-import mycorda.app.ses.SimpleEventStore
+import mycorda.app.ses.InMemoryEventStore
 import mycorda.app.sks.SKS
 import mycorda.app.sks.SimpleKVStore
 import java.lang.Exception
@@ -21,7 +21,7 @@ class SimpleContinuationRegistrar : Registrar {
             if (strict) {
                 throw RuntimeException("There should be an EventStore class in the registry")
             } else {
-                registry.store(SimpleEventStore())
+                registry.store(InMemoryEventStore())
             }
         }
         if (!registry.contains(SKS::class.java)) {
