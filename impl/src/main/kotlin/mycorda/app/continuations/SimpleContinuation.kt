@@ -77,13 +77,14 @@ class SimpleSchedulerService(registry: Registry) : SchedulerService {
     private val es = registry.get(EventStore::class.java)
     private val schedules = ArrayList<Scheduled<Any>>()
 
-    override fun <T : Any> schedule(action: Scheduled<out T>) {
+    override fun <T : Any> schedule(action: Scheduled<T>) {
         // create a persistent event for recovery
         es.store(ScheduledActionCreatedFactory.create(action))
         schedules.add(action)
     }
 
     override fun <T : Any> get(key: String): Scheduled<T> {
+        @Suppress("UNCHECKED_CAST")
         return schedules.single { it.key == key } as Scheduled<T>
     }
 
@@ -144,6 +145,7 @@ class SimpleContinuation(
             }
         } else {
             // step has run successfully and can be skipped
+            @Suppress("UNCHECKED_CAST")
             return lookup[key] as T
         }
     }

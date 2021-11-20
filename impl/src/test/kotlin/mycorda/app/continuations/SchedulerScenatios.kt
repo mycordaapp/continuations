@@ -36,25 +36,25 @@ class SchedulerScenarios {
     }
 
 
-    @Test
-    fun `foo`() {
-        val registry = Registry().store(FileEventStore("../.testing/${String.random()}"))
-        registry.store(FailImmediatelyExceptionStrategy())
-        SimpleContinuationRegistrar().register(registry)
-
-        val continuationId = ContinuationId.random()
-
-        val chaos = Chaos(
-            mapOf(
-                "step2" to listOf(AlwaysFail()),
-            ),
-            ignoreWarnings = true
-        )
-        val spy = Spy()
-
-
-        //val result = ThreeSteps(registry.clone().store(spy).store(chaos), continuationId).exec(10)
-        //assertThat(result, equalTo(202))
-
-    }
+//    @Test
+//    fun `foo`() {
+//        val registry = Registry().store(FileEventStore("../.testing/${String.random()}"))
+//        registry.store(FailImmediatelyExceptionStrategy())
+//        SimpleContinuationRegistrar().register(registry)
+//
+//        val continuationId = ContinuationId.random()
+//
+//        val chaos = Chaos(
+//            mapOf(
+//                "step2" to listOf(AlwaysFail()),
+//            ),
+//            ignoreWarnings = true
+//        )
+//        val spy = Spy()
+//
+//
+//        val result = ThreeSteps(registry.clone().store(spy).store(chaos), continuationId).exec(10)
+//        assertThat(result, equalTo(202))
+//
+//    }
 }

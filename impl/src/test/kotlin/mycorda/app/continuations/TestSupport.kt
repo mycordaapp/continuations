@@ -17,12 +17,12 @@ class ThreeSteps(
     private val chaos = registry.getOrElse(Chaos::class.java, Chaos(emptyMap(), true))
     private val spy = registry.getOrElse(Spy::class.java, Spy())
 
-    override fun exec(startNumber: Int): Int {
+    override fun exec(input: Int): Int {
         testDecoration("starting")
         // run a sequence of calculations
         val step1Result = continuation.execBlock("step1", 1::class) {
             testDecoration("step1")
-            startNumber * startNumber
+            input * input
         }
         val step2Result = continuation.execBlock("step2", 1::class) {
             testDecoration("step2")
