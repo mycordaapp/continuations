@@ -1,6 +1,7 @@
 package mycorda.app.continuations
 
 import mycorda.app.chaos.Chaos
+import mycorda.app.registry.Registrar
 import mycorda.app.registry.Registry
 import mycorda.app.xunitpatterns.spy.Spy
 
@@ -38,6 +39,20 @@ class ThreeSteps(
     private fun testDecoration(step: String) {
         spy.spy(step)
         chaos.chaos(step)
+    }
+}
+
+
+//class TestSupportRegistrar : Registrar {
+//    override fun register(registry: Registry, strict: Boolean): Registry {
+//        registry
+//    }
+//
+//}
+
+class TestSupportRegistrations : ContinuableRegistrations {
+    override fun iterator(): Iterator<ContinuableRegistration> {
+        return listOf(ContinuableRegistration(ThreeSteps::class)).iterator()
     }
 }
 

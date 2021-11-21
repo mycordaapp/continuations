@@ -15,24 +15,25 @@ import java.lang.RuntimeException
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
-class ContinuableWorker(registry: Registry) {
-    private data class Scheduled(
-        val continuable: String,
-        val id: ContinuationId,
-        val input: Any,
-        val time: Long
-    )
+data class Schedule<T>(
+    val continuableName: String,
+    val id: ContinuationId,
+    val input: T,
+    val time: Long
+)
 
-    enum class ContinuationStatus {
-        UnknownContinuation,
-        NotStarted,
-        Running,
-        Completed,
-        Failed
-    }
+enum class ContinuationStatus {
+    UnknownContinuation,
+    NotStarted,
+    Running,
+    Completed,
+    Failed
+}
+
+class ContinuableWorker(registry: Registry) {
 
     private val factory = registry.get(ContinuableFactory::class.java)
-    private val schedule = ArrayList<Scheduled>()
+    private val schedule = ArrayList<Schedule<Any>>()
     private val executorService = Executors.newFixedThreadPool(10)
     private val es = registry.get(EventStore::class.java)
     private val kv = registry.get(SimpleKVStore::class.java)
@@ -41,16 +42,26 @@ class ContinuableWorker(registry: Registry) {
         thread(start = true, block = monitorThread())
     }
 
-    fun schedule(continuable: String, id: ContinuationId, input: Any, time: Long) {
+    fun <T> schedule(scheduled: Schedule<T>) {
+        this.schedule(
+            scheduled.continuableName,
+            scheduled.id,
+            scheduled.input,
+            scheduled.time
+        )
+    }
+
+
+    fun <T> schedule(continuableName: String, id: ContinuationId, input: T, time: Long) {
         synchronized(this) {
             val payload = ScheduledActionCreated(
                 key = id.id(),
                 ctx = ContinuationContext(),
-                clazzName = continuable,
+                clazzName = continuableName,
                 scheduledTime = time
             )
             es.store(ScheduledActionCreatedFactory.create(payload))
-            this.schedule.add(Scheduled(continuable, id, input, time))
+            this.schedule.add(Schedule(continuableName, id, input as Any, time))
         }
     }
 
@@ -94,7 +105,7 @@ class ContinuableWorker(registry: Registry) {
                         factory,
                         es,
                         kv,
-                        it.continuable,
+                        it.continuableName,
                         it.id,
                         it.input
                     )

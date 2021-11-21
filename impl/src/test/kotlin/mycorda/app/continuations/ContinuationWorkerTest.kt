@@ -1,40 +1,36 @@
 package mycorda.app.continuations
 
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import mycorda.app.continuations.events.ContinuationCompletedFactory
 import mycorda.app.ses.*
 import org.junit.jupiter.api.Test
 
 class ContinuationWorkerTest {
     @Test
-    fun `should do something`() {
+    fun `should run continuation via factory`() {
+        // 1. setup registry & factory
         val registry = SimpleContinuationRegistrar().register()
         val es = registry.get(EventStore::class.java)
-
-        val worker = ContinuableWorker(registry)
-
         val factory = registry.get(ContinuableFactory::class.java)
-        factory.register(ThreeSteps::class)
-        // force class loader cost BEFORE test
-        factory.createInstance(ThreeSteps::class, ContinuationId.random())
+        factory.register(TestSupportRegistrations())
+        factory.createInstance(ThreeSteps::class)  // force class loader cost BEFORE test
 
-
+        // 2. setup a new schedule
+        val worker = ContinuableWorker(registry)
         val id = ContinuationId.random()
-        worker.schedule(ThreeSteps::class.qualifiedName!!, id, 10, System.currentTimeMillis() + 50)
-        //Thread.sleep(200)
+        val schedule = Schedule(ThreeSteps::class.qualifiedName!!, id, 10, System.currentTimeMillis() + 50)
 
+        // 3. Start the worker and check the state machine
+        assertThat(worker.status(id), equalTo(ContinuationStatus.UnknownContinuation))
+        worker.schedule(schedule)
+        assertThat(worker.status(id), equalTo(ContinuationStatus.NotStarted))
+        // todo - a check that we also go into running state
         es.pollForEvent(
             AllOfQuery(listOf(AggregateIdQuery(id.id()), ContinuationCompletedFactory.typeFilter()))
         )
-
-        //Thread.sleep(1000)
-        println("status 4 - ${worker.status(id)}")
-
-        registry.get(EventStore::class.java).read(EverythingQuery).forEach {
-            println(it)
-        }
-
-        Thread.sleep(100)
-        println(worker.result<Int>(id))
+        assertThat(worker.status(id), equalTo(ContinuationStatus.Completed))
+        assertThat(worker.result<Int>(id), equalTo(202))
     }
 
 
