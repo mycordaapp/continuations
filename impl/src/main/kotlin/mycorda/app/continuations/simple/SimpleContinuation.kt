@@ -1,5 +1,7 @@
-package mycorda.app.continuations
+package mycorda.app.continuations.simple
 
+
+import mycorda.app.continuations.*
 import mycorda.app.continuations.events.ScheduledActionCreatedFactory
 import mycorda.app.registry.Registrar
 import mycorda.app.registry.Registry
@@ -11,6 +13,27 @@ import java.lang.Exception
 import java.lang.Long.max
 import java.lang.RuntimeException
 import kotlin.reflect.KClass
+
+/**
+ * Something that can be scheduled to run at some point in the future
+ */
+data class Scheduled<out T : Any>(
+    val key: String,
+    val ctx: ContinuationContext,
+    val clazz: KClass<out T>, // can I get rid of this
+    val block: (ctx: ContinuationContext) -> T,
+    val scheduledTime: Long = System.currentTimeMillis() + 1000
+)
+
+interface Scheduler {
+    fun <T : Any> schedule(scheduled: Scheduled<T>)
+    fun <T : Any> waitFor(key: String): T
+}
+
+interface SchedulerFactory {
+    fun get(continuation: Continuation): Scheduler
+}
+
 
 /**
  * Wires up a SimpleContinuation

@@ -60,22 +60,62 @@ class ThreeSteps(
   conform to the rules
   of [Really Simple Serialisation(rss)](https://github.com/mycordaapp/really-simple-serialisation#readme).
 
-## Exception handling and retries
+The code snippets from the [Test Case](../impl/src/test/kotlin/mycorda/app/continuations/ContinuationScenarios.kt)
+demonstrate the basic behaviour.
 
-Continuations are required to solve two fundamental problems:
+```kotlin
+val registry = SimpleContinuationRegistrar().register()
+
+@Test
+fun `should run to completion`() {
+    // Continuation provided by registry
+    val result = ThreeSteps(registry).exec(10)
+    assertThat(result, equalTo(202))
+}
+
+@Test
+fun `should return result of previous run if rerun`() {
+    // The basic promise of any continuation. If rerun
+    // it will not trigger the block that have already completed
+    val continuationId = ContinuationId.random()
+
+    // Spy on the first run
+    val spy1 = Spy()
+    val result1 = ThreeSteps(registry.clone().store(spy1), continuationId).exec(10)
+    assertThat(result1, equalTo(202))
+    assertThat(spy1.secrets(), equalTo(listOf("starting", "step1", "step2", "step3")))
+
+    // Spy on the second run - all steps have completed, so it just returns the result of step3
+    val spy2 = Spy()
+    val result2 = ThreeSteps(registry.clone().store(spy2), continuationId).exec(10)
+    assertThat(result2, equalTo(202))
+    assertThat(spy2.secrets(), equalTo(listOf("starting")))
+}
+
+```
+
+## Running Continuations with retry / error handling
+
+Continuations are required to solve two fundamental problems for stateful systems once we move beyond a single server /
+container :
 
 * what happens if a block fails? Should the code give up or retry? And, if it is retrying, what is the strategy for
   selecting delays and when to finally give up retrying
 * what happens if the process running the continuation stops? Either due to a system failure or a restart issued by an
   orchestrator such as Kubernetes
 
-The first problem can be handled either with-in the continuation logic (so the continuation itself does not fail)
+The first problem can be handled either within the continuation logic (so the continuation itself does not fail)
 or by treating the failure as a failure of the entire process. The first approach feels better and is supported by
 the [Simple Continuation](./simple-continuation.md).
 
-The second problem requires ...
+The second problem requires something that can be started / restarted and something to do the starting / restarting. The
+ability to start is defined by the `Continuable` interface, and the ability to manage the starting is defined by
+the `ContinuableWorker` interface.
 
-##  
+## Continuable 
+
+
+
 
 ## Serialisation
 

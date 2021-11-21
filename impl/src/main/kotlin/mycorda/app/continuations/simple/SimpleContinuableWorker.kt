@@ -1,6 +1,7 @@
-package mycorda.app.continuations
+package mycorda.app.continuations.simple
 
 import mycorda.app.clock.PlatformTimer
+import mycorda.app.continuations.*
 import mycorda.app.continuations.events.*
 import mycorda.app.registry.Registry
 import mycorda.app.ses.AggregateIdQuery
@@ -15,23 +16,7 @@ import java.lang.RuntimeException
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
-data class Schedule<T>(
-    val continuableName: String,
-    val id: ContinuationId,
-    val input: T,
-    val time: Long
-)
-
-enum class ContinuationStatus {
-    UnknownContinuation,
-    NotStarted,
-    Running,
-    Completed,
-    Failed
-}
-
-class ContinuableWorker(registry: Registry) {
-
+class SimpleContinuableWorker(registry: Registry) : ContinuableWorker {
     private val factory = registry.get(ContinuableFactory::class.java)
     private val schedule = ArrayList<Schedule<Any>>()
     private val executorService = Executors.newFixedThreadPool(10)
@@ -42,7 +27,7 @@ class ContinuableWorker(registry: Registry) {
         thread(start = true, block = monitorThread())
     }
 
-    fun <T> schedule(scheduled: Schedule<T>) {
+    override fun <T> schedule(scheduled: Schedule<T>) {
         this.schedule(
             scheduled.continuableName,
             scheduled.id,
@@ -51,8 +36,7 @@ class ContinuableWorker(registry: Registry) {
         )
     }
 
-
-    fun <T> schedule(continuableName: String, id: ContinuationId, input: T, time: Long) {
+    private fun <T> schedule(continuableName: String, id: ContinuationId, input: T, time: Long) {
         synchronized(this) {
             val payload = ScheduledActionCreated(
                 key = id.id(),
@@ -65,7 +49,7 @@ class ContinuableWorker(registry: Registry) {
         }
     }
 
-    fun <O> result(id: ContinuationId): O {
+    override fun <O> result(id: ContinuationId): O {
         if (status(id) == ContinuationStatus.Completed) {
             return kv.getDeserialised<O>(UniqueId(id.id()))
         } else {
@@ -73,7 +57,7 @@ class ContinuableWorker(registry: Registry) {
         }
     }
 
-    fun status(id: ContinuationId): ContinuationStatus {
+    override fun status(id: ContinuationId): ContinuationStatus {
         var status = ContinuationStatus.UnknownContinuation
         val events = es.read(AggregateIdQuery(id.id()))
         if (events.isNotEmpty()) {

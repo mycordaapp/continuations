@@ -1,10 +1,19 @@
 package mycorda.app.continuations
 
 import mycorda.app.types.StringList
+import mycorda.app.types.UniqueId
 import java.lang.Exception
 import java.util.*
 import kotlin.reflect.KClass
 
+// are these good candidates for commons ?
+data class ExceptionInfo(val clazz: KClass<out Throwable>, val message: String) {
+    constructor(ex: Throwable) : this(ex::class, ex.message!!)
+}
+
+class ExceptionInfoList(data: List<ExceptionInfo>) : ArrayList<ExceptionInfo>(data) {
+    constructor() : this(emptyList())
+}
 
 data class ContinuationContext(
     /**
@@ -16,7 +25,7 @@ data class ContinuationContext(
      * Handlers can use this to help fine tune the retry logic. By default its set to
      * the exception message.
      */
-    val errorStack: StringList = StringList(emptyList())
+    val errorStack: ExceptionInfoList = ExceptionInfoList()
 )
 
 /**
@@ -26,15 +35,17 @@ data class ContinuationContext(
 class ContinuationId private constructor(private val id: String) {
     fun id(): String = id
 
+    fun toUniqueId(): UniqueId = UniqueId(id())
+
     companion object {
-        fun random(): ContinuationId {
-            return ContinuationId(UUID.randomUUID().toString())
-        }
+        fun random(): ContinuationId = ContinuationId(UUID.randomUUID().toString())
 
         fun fromString(id: String): ContinuationId {
             UUID.fromString(id) // checks it a UUID Id
             return ContinuationId(id)
         }
+
+        fun fromUniqueId(uniqueId: UniqueId): ContinuationId = ContinuationId(uniqueId.toString())
     }
 
     override fun equals(other: Any?): Boolean {
@@ -48,9 +59,7 @@ class ContinuationId private constructor(private val id: String) {
     }
 
     override fun toString(): String = id
-
 }
-
 
 
 /**
@@ -82,26 +91,9 @@ interface ContinuationFactory {
     fun exceptionStrategy(): ContinuationExceptionStrategy
 }
 
-interface SchedulerFactory {
-    fun get(continuation: Continuation): Scheduler
-}
 
 
-/**
- * Something that can be scheduled to run at some point in the future
- */
-data class Scheduled<out T : Any>(
-    val key: String,
-    val ctx: ContinuationContext,
-    val clazz: KClass<out T>, // can I get rid of this
-    val block: (ctx: ContinuationContext) -> T,
-    val scheduledTime: Long = System.currentTimeMillis() + 1000
-)
 
-interface Scheduler {
-    fun <T : Any> schedule(scheduled: Scheduled<T>)
-    fun <T : Any> waitFor(key: String): T
-}
 
 //
 //class RestartableContinuation(
@@ -190,8 +182,8 @@ interface ContinuationExceptionStrategy {
      * A helper to run the standard logic for keeping track of the
      */
     fun incrementRetriesHelper(ctx: ContinuationContext, ex: Exception): ContinuationContext {
-        val newStack = StringList(ctx.errorStack)
-        newStack.add(0, "${ex::class.qualifiedName}: ${ex.message!!}")
+        val newStack = ExceptionInfoList(ctx.errorStack)
+        newStack.add(0, ExceptionInfo(ex))
         return ctx.copy(attempts = ctx.attempts + 1, errorStack = newStack)
     }
 }

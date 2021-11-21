@@ -1,6 +1,7 @@
 package mycorda.app.continuations
 
 import mycorda.app.chaos.Chaos
+import mycorda.app.continuations.simple.SimpleContinuationRegistrar
 import mycorda.app.registry.Registrar
 import mycorda.app.registry.Registry
 import mycorda.app.xunitpatterns.spy.Spy

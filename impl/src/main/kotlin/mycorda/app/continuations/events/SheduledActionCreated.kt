@@ -1,7 +1,7 @@
 package mycorda.app.continuations.events
 
 import mycorda.app.continuations.ContinuationContext
-import mycorda.app.continuations.Scheduled
+import mycorda.app.continuations.simple.Scheduled
 import mycorda.app.ses.Event
 import mycorda.app.ses.EventFactory
 

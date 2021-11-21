@@ -4,6 +4,7 @@ import com.google.common.base.Predicates.instanceOf
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import mycorda.app.continuations.simple.SimpleContinuationRegistrar
 import org.junit.jupiter.api.Test
 
 class ContinuableFactoryTest {

@@ -1,25 +1,26 @@
-package mycorda.app.continuations
+package mycorda.app.continuations.simple
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import mycorda.app.chaos.Chaos
 import mycorda.app.chaos.FailWithPattern
 import mycorda.app.chaos.Noop
-import mycorda.app.helpers.random
+import mycorda.app.continuations.ContinuationId
+import mycorda.app.continuations.ThreeSteps
 import mycorda.app.xunitpatterns.spy.Spy
 import org.junit.jupiter.api.Test
 
-class ContinuationScenarios {
+class SimpleContinuationScenarios {
 
     @Test
-    fun `should complete normally with inbuilt Continuation`() {
-        // using inbuilt Factories
+    fun `should complete normally with inbuilt SimpleContinuation`() {
+        // using  factories build into the ThreeSteps
         val result = ThreeSteps().exec(10)
         assertThat(result, equalTo(202))
     }
 
     @Test
-    fun `should wire up Continuation using registrar`() {
+    fun `should wire up SimpleContinuation using registrar`() {
         val registry = SimpleContinuationRegistrar().register()
 
         // Continuation provided by registry
@@ -48,8 +49,33 @@ class ContinuationScenarios {
     }
 
     @Test
-    fun `should retry failed steps using retry strategy`() {
+    fun `should retry failed steps using defualt retry strategy`() {
         val registry = SimpleContinuationRegistrar().register()
+        val continuationId = ContinuationId.random()
+
+        val chaos = Chaos(
+            mapOf(
+                "step1" to listOf(Noop()),
+                "step2" to listOf(FailWithPattern("FFF.")),
+                "step3" to listOf(Noop()),
+            )
+        )
+        val spy = Spy()
+
+        // Run with some chaos - step2 will fail 3 times
+        // note, by default, SimpleContinuation will retry after an exception upto 10 times
+        val result = ThreeSteps(registry.clone().store(spy).store(chaos), continuationId).exec(10)
+        assertThat(result, equalTo(202))
+
+        // step2 is present 4 times - three failures and one success
+        assertThat(spy.secrets(), equalTo(listOf("starting", "step1", "step2", "step2", "step2", "step2", "step3")))
+
+    }
+
+    @Test
+    fun `should retry failed steps using specified retry strategy`() {
+        val registry = SimpleContinuationRegistrar().register()
+
         val continuationId = ContinuationId.random()
 
         val chaos = Chaos(
