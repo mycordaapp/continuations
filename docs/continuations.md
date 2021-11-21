@@ -1,0 +1,89 @@
+# Continuation
+
+[home](../README.md)
+
+## What is a Continuation ?
+
+A `Continuation` is simply an injectable service that allows the developer to break a method into 1 or more steps that
+are managed by the `Continuation`. If the method is restarted then the Continuation logic will restart directly after
+the last successful step. The breakdown of the steps and the logic within steps is entirely a decision for developer,
+but in most cases Continuations will control processes that are subject to failure of some form.
+
+The simple example below explains it well. In the case we use
+the [Chaos](https://github.com/mycordaapp/commons/blob/master/docs/chaos.md) library to inject failure conditions.
+
+```kotlin
+class ThreeSteps(
+    registry: Registry = SimpleContinuationRegistrar().register(),
+    continuationId: ContinuationId = ContinuationId.random()
+) : Continuable<Int, Int> {
+    // #1. setup continuations
+    private val factory = registry.get(ContinuationFactory::class.java)
+    private val continuation = factory.get(continuationId)
+
+    // #2. setup internal test support
+    private val chaos = registry.getOrElse(Chaos::class.java, Chaos(emptyMap(), true))
+    private val spy = registry.getOrElse(Spy::class.java, Spy())
+
+    override fun exec(input: Int): Int {
+        testDecoration("starting")
+        // #3. run a sequence of calculations
+        val step1Result = continuation.execBlock("step1", 1::class) {
+            testDecoration("step1")
+            input * input
+        }
+        val step2Result = continuation.execBlock("step2", 1::class) {
+            testDecoration("step2")
+            step1Result + 1
+        }
+        return continuation.execBlock("step3", 1::class) {
+            testDecoration("step3")
+            step2Result + step2Result
+        }
+    }
+
+    // #4 control and spy on the test double - wouldn't expect this in real code
+    private fun testDecoration(step: String) {
+        spy.spy(step)
+        chaos.chaos(step)
+    }
+}
+```
+
+* the `#1. setup continuations` block is more or less boiler-plate code. The class retrieves its `Continuation` via a
+  factory.
+* the `#2. setup internal test support` and `#4 control and spy on the test double` blocks are purely for testing, and
+  wouldn't be in production code.
+* the `#3. run a sequence of calculations` contains the sequence of continuations. The guarantee that the continuation
+  will provide is that if restarted with the same `continuationId`, it will silently skip any completed steps, simply
+  replacing the code block with the stored value from the earlier run. There is a limitation that the store value must
+  conform to the rules
+  of [Really Simple Serialisation(rss)](https://github.com/mycordaapp/really-simple-serialisation#readme).
+
+## Exception handling and retries
+
+Continuations are required to solve two fundamental problems:
+
+* what happens if a block fails? Should the code give up or retry? And, if it is retrying, what is the strategy for
+  selecting delays and when to finally give up retrying
+* what happens if the process running the continuation stops? Either due to a system failure or a restart issued by an
+  orchestrator such as Kubernetes
+
+The first problem can be handled either with-in the continuation logic (so the continuation itself does not fail)
+or by treating the failure as a failure of the entire process. The first approach feels better and is supported by
+the [Simple Continuation](./simple-continuation.md).
+
+The second problem requires ...
+
+##  
+
+## Serialisation
+
+TODO - Some notes on rss
+
+## Upgrades
+
+_TODO - note on how to manage upgrades unlike Corda flows, this should be possible; there is no fancy serialisation
+logic and upgrade specific behaviour can be injected_
+
+_But need to work through the scenarios_

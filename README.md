@@ -28,7 +28,7 @@ This library needs to solve three basic problems:
     - when to restart (scheduling)
     - when to give up (dead letter)
 
-See [Design Notes](./docs/design-notes.md)
+See [Continuations](./docs/continuations.md) for details
 
 ## Dependencies
 
