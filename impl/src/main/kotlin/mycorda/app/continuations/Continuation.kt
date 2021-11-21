@@ -7,7 +7,8 @@ import java.util.*
 import kotlin.reflect.KClass
 
 // are these good candidates for commons ?
-data class ExceptionInfo(val clazz: KClass<out Throwable>, val message: String) {
+data class ExceptionInfo(val clazzName: String, val message: String) {
+    constructor(clazz: KClass<out Throwable>, message: String) : this(clazz.qualifiedName!!, message)
     constructor(ex: Throwable) : this(ex::class, ex.message!!)
 }
 

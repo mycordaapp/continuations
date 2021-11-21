@@ -17,7 +17,7 @@ data class Schedule<T>(
     val continuableName: String,
     val id: ContinuationId,
     val input: T,
-    val time: Long
+    val time: Long = System.currentTimeMillis()
 )
 
 enum class ContinuationStatus {
@@ -31,5 +31,6 @@ enum class ContinuationStatus {
 interface ContinuableWorker {
     fun <T> schedule(scheduled: Schedule<T>)
     fun <O> result(id: ContinuationId): O
+    fun exception(id: ContinuationId): ExceptionInfo
     fun status(id: ContinuationId): ContinuationStatus
 }

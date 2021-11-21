@@ -96,6 +96,4 @@ class SimpleContinuationScenarios {
             assertThat(spy.secrets(), equalTo(listOf("starting", "step1", "step2", "step2")))
         }
     }
-
-
 }

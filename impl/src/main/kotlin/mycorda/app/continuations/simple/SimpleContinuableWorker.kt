@@ -57,6 +57,14 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker {
         }
     }
 
+    override fun exception(id: ContinuationId): ExceptionInfo {
+        if (status(id) == ContinuationStatus.Failed) {
+            return kv.getDeserialised(UniqueId(id.id()))
+        } else {
+            throw RuntimeException("No exception available")
+        }
+    }
+
     override fun status(id: ContinuationId): ContinuationStatus {
         var status = ContinuationStatus.UnknownContinuation
         val events = es.read(AggregateIdQuery(id.id()))
@@ -100,8 +108,6 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker {
             PlatformTimer.sleepForTicks(1)
         }
     }
-
-
 }
 
 class WorkerThread(
@@ -123,8 +129,13 @@ class WorkerThread(
             ew.store(ContinuationCompletedFactory.create(id))
         } catch (ie: InterruptedException) {
             // should we have custom logic for the thread problems ?
+            kv.put(UniqueId(id.id()), SKSValue(ExceptionInfo(ie), SKSValueType.Serialisable))
             ew.store(ContinuationFailedFactory.create(id, ie))
+        } catch (ex: Exception) {
+            kv.put(UniqueId(id.id()), SKSValue(ExceptionInfo(ex), SKSValueType.Serialisable))
+            ew.store(ContinuationFailedFactory.create(id, ex))
         } catch (t: Throwable) {
+            kv.put(UniqueId(id.id()), SKSValue(ExceptionInfo(t), SKSValueType.Serialisable))
             ew.store(ContinuationFailedFactory.create(id, t))
         }
     }
