@@ -50,8 +50,8 @@ class ThreeSteps(
 }
 ```
 
-* the `#1. setup continuations` block is more or less boiler-plate code. The class retrieves its `Continuation` via a
-  factory. The **important** point is that for a given continuationId, the factory will return the state of the previous
+* the `#1. setup continuations` block is more or less boiler-plate code. The class retrieves its `Continuation` via the
+  factory. **The important point** is that for a given continuationId, the factory will return the state of the previous
   run, if there was run. The continuation doesn't need to know how the factory manages this. There is of course an
   implicit rule that only a single instance of a given continuation should be running at a point in time.
 * the `#2. setup internal test support` and `#4 control and spy on the test double` blocks are purely for testing, and
