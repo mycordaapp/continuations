@@ -2,13 +2,18 @@ package mycorda.app.continuations.simple
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import mycorda.app.chaos.AlwaysFail
 import mycorda.app.chaos.Chaos
 import mycorda.app.chaos.FailWithPattern
 import mycorda.app.chaos.Noop
 import mycorda.app.continuations.ContinuationId
+import mycorda.app.continuations.RetryNTimesExceptionStrategy
 import mycorda.app.continuations.ThreeSteps
+import mycorda.app.registry.Registry
 import mycorda.app.xunitpatterns.spy.Spy
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
+import java.lang.RuntimeException
 
 class SimpleContinuationScenarios {
 
@@ -49,7 +54,7 @@ class SimpleContinuationScenarios {
     }
 
     @Test
-    fun `should retry failed steps using defualt retry strategy`() {
+    fun `should retry failed steps using default retry strategy`() {
         val registry = SimpleContinuationRegistrar().register()
         val continuationId = ContinuationId.random()
 
@@ -73,28 +78,23 @@ class SimpleContinuationScenarios {
     }
 
     @Test
-    fun `should retry failed steps using specified retry strategy`() {
-        val registry = SimpleContinuationRegistrar().register()
+    fun `should fail if retries are exhausted`() {
+        val registry = Registry().store(RetryNTimesExceptionStrategy(1))
+        SimpleContinuationRegistrar().register(registry)
 
         val continuationId = ContinuationId.random()
-
         val chaos = Chaos(
-            mapOf(
-                "step1" to listOf(Noop()),
-                "step2" to listOf(FailWithPattern("FFF.")),
-                "step3" to listOf(Noop()),
-            )
+            mapOf("step2" to listOf(AlwaysFail())),
+            false
         )
         val spy = Spy()
 
-        // Run with some chaos - step2 will fail 3 times
-        // note, by default, SimpleContinuation will retry after an exception upto 10 times
-        val result = ThreeSteps(registry.clone().store(spy).store(chaos), continuationId).exec(10)
-        assertThat(result, equalTo(202))
-
-        // step2 is present 4 times - three failures and one success
-        assertThat(spy.secrets(), equalTo(listOf("starting", "step1", "step2", "step2", "step2", "step2", "step3")))
-
+        try {
+            ThreeSteps(registry.clone().store(spy).store(chaos), continuationId).exec(10)
+            fail("Exception expected")
+        } catch (ex: RuntimeException) {
+            assertThat(spy.secrets(), equalTo(listOf("starting", "step1", "step2", "step2")))
+        }
     }
 
 

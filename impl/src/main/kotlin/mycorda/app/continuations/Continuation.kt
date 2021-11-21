@@ -1,6 +1,6 @@
 package mycorda.app.continuations
 
-import mycorda.app.types.StringList
+
 import mycorda.app.types.UniqueId
 import java.lang.Exception
 import java.util.*
@@ -90,60 +90,6 @@ interface ContinuationFactory {
     fun get(continuationId: ContinuationId): Continuation
     fun exceptionStrategy(): ContinuationExceptionStrategy
 }
-
-
-
-
-
-//
-//class RestartableContinuation(
-//    registry: Registry = Registry(),
-//    private val exceptionStrategy: ContinuationExceptionStrategy = RetryNTimesExceptionStrategy()
-//) : Continuation {
-//    private val scheduler = registry.getOrElse(Scheduler::class.java, SimpleScheduler(this))
-//    private val lookup = HashMap<String, Any>()
-//    override fun <T : Any> execBlock(
-//        key: String,
-//        clazz: KClass<out T>,
-//        block: (ctx: ContinuationContext) -> T,
-//        ctx: ContinuationContext
-//    ): T {
-//        if (!lookup.containsKey(key)) {
-//            // step has not run successfully before
-//
-//            try {
-//                val result = block.invoke(ctx)
-//                lookup[key] = result
-//                return result
-//            } catch (ex: Exception) {
-//                val retry = exceptionStrategy.handle(ctx, ex)
-//                when (retry) {
-//                    is ImmediateRetry -> {
-//                        if (retry.maxAttempts >= ctx.attempts) {
-//                            return this.execBlock(key, clazz, block, ctx)
-//                        }
-//                    }
-//                    is DelayedRetry -> {
-//                        if (retry.maxAttempts >= ctx.attempts) {
-//                            val scheduled = Scheduled(key, ctx, clazz, block)
-//                            scheduler.schedule(scheduled)
-//                            return scheduler.waitFor(key)
-//                        }
-//                    }
-//                    is DontRetry -> {
-//                        // todo - log before throwing
-//                        throw ex
-//                    }
-//                }
-//                // what to do here ?
-//                throw ex
-//            }
-//        } else {
-//            // step has run successfully and can be skipped
-//            return lookup[key] as T
-//        }
-//    }
-//}
 
 
 /**

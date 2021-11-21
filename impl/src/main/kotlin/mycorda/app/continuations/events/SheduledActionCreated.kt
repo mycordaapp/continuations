@@ -15,7 +15,6 @@ data class ScheduledActionCreated(
 
 object ScheduledActionCreatedFactory : EventFactory {
 
-
     fun create(action: Scheduled<Any>): Event {
 
         val payload = ScheduledActionCreated(

@@ -146,13 +146,13 @@ class SimpleContinuation(
                 val retry = exceptionStrategy.handle(ctx, ex)
                 when (retry) {
                     is ImmediateRetry -> {
-                        if (retry.maxAttempts >= ctx.attempts) {
-                            return this.execBlock(key, clazz, block, ctx)
+                        if (retry.maxAttempts >= retry.newContext().attempts) {
+                            return this.execBlock(key, clazz, block, retry.newContext())
                         }
                     }
                     is DelayedRetry -> {
-                        if (retry.maxAttempts >= ctx.attempts) {
-                            val scheduled = Scheduled(key, ctx, clazz, block)
+                        if (retry.maxAttempts >= retry.newContext().attempts) {
+                            val scheduled = Scheduled(key, retry.newContext(), clazz, block)
                             scheduler.schedule(scheduled)
                             return scheduler.waitFor(key)
                         }
