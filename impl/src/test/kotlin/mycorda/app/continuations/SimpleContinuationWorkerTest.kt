@@ -2,9 +2,11 @@ package mycorda.app.continuations
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import mycorda.app.chaos.AlwaysFail
 import mycorda.app.chaos.Chaos
+import mycorda.app.clock.PlatformTimer
 import mycorda.app.continuations.events.ContinuationCompletedFactory
 import mycorda.app.continuations.events.ContinuationFailedFactory
 import mycorda.app.continuations.events.ContinuationStartedFactory
@@ -16,23 +18,35 @@ import org.junit.jupiter.api.Test
 import java.lang.RuntimeException
 
 class SimpleContinuationWorkerTest {
+
     @Test
     fun `should run continuation via the worker`() {
         val (registry, es) = setupServices()
-        val (worker, id, schedule) = scheduleContinuable(registry)
+        val (worker, id, schedule) = scheduleContinuable(registry, PlatformTimer.clockTick() + 10)
 
         // Start the worker and check the state machine
         assertThat(worker.status(id), equalTo(ContinuationStatus.UnknownContinuation))
+        assertThat(worker.continuations().toList(), isEmpty)
         worker.schedule(schedule)
         assertThat(worker.status(id), equalTo(ContinuationStatus.NotStarted))
-        // todo - a check that we also go into running state
+        assertThat(worker.continuations().toList(), equalTo(listOf(id)))
+
+        // keep polling until we trigger running state
+        var tries = 0
+        while (worker.status(id) != ContinuationStatus.Running && tries < 20) {
+            PlatformTimer.sleepForTicks(1)
+            tries++
+        }
+
+        // wait for completed event
         es.pollForEvent(
             AllOfQuery(listOf(AggregateIdQuery(id.id()), ContinuationCompletedFactory.typeFilter()))
         )
         assertThat(worker.status(id), equalTo(ContinuationStatus.Completed))
         assertThat(worker.result<Int>(id), equalTo(202))
-    }
+        assertThat(worker.continuations().toList(), equalTo(listOf(id)))
 
+    }
 
     @Test
     fun `should run report exception for a failed continuation`() {
@@ -52,8 +66,6 @@ class SimpleContinuationWorkerTest {
         )
         assertThat(worker.status(id), equalTo(ContinuationStatus.Failed))
         assertThat(worker.exception(id), equalTo(ExceptionInfo(RuntimeException("opps"))))
-
-        es.read(AggregateIdQuery(id.id())).forEach { println("${it.type} - ${it.payload}") }
     }
 
     @Test
@@ -69,7 +81,7 @@ class SimpleContinuationWorkerTest {
         es.pollForEvent(
             AllOfQuery(listOf(AggregateIdQuery(id.id()), ContinuationStartedFactory.typeFilter()))
         )
-        assert(monitor.threadId(id) != null)
+        assert(monitor.threadId(id) != 0L)
     }
 
     private fun setupServices(beforeBlock: (registry: Registry) -> Unit = {}): Pair<Registry, EventStore> {

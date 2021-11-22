@@ -28,11 +28,28 @@ enum class ContinuationStatus {
     Failed
 }
 
+
+data class ContinuationInfo(
+    val id: ContinuationId,
+    val status: ContinuationStatus,
+    val startedAt: Long? = null,
+    val finishedAt: Long? = null,
+    val platformId: String? = null,
+    val totalTime: Long? = if (startedAt != null && finishedAt != null) {
+        finishedAt - startedAt
+    } else null
+)
+
+/**
+ * The minimum services any Worker should expose 
+ */
 interface ContinuableWorker {
+
     fun <T> schedule(scheduled: Schedule<T>)
     fun <O> result(id: ContinuationId): O
     fun exception(id: ContinuationId): ExceptionInfo
     fun status(id: ContinuationId): ContinuationStatus
+    fun continuations(): Iterable<ContinuationId>
 }
 
 /**

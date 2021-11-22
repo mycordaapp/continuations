@@ -4,10 +4,7 @@ import mycorda.app.clock.PlatformTimer
 import mycorda.app.continuations.*
 import mycorda.app.continuations.events.*
 import mycorda.app.registry.Registry
-import mycorda.app.ses.AggregateIdQuery
-import mycorda.app.ses.AllOfQuery
-import mycorda.app.ses.EventStore
-import mycorda.app.ses.EventWriter
+import mycorda.app.ses.*
 import mycorda.app.sks.SKS
 import mycorda.app.sks.SKSValue
 import mycorda.app.sks.SKSValueType
@@ -85,6 +82,14 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker, Continuab
             }
         }
         return status
+    }
+
+    override fun continuations(): Iterable<ContinuationId> {
+        val pattern = LikeString("mycorda.app.continuations.events.%")
+        return es.read(LikeEventTypeQuery(pattern))
+            .map { it.aggregateId }
+            .distinct()
+            .map { ContinuationId.fromString(it!!) }
     }
 
     private fun monitorThread(): () -> Unit = {
