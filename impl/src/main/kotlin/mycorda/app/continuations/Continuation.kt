@@ -70,14 +70,14 @@ class ContinuationId private constructor(private val id: String) {
 interface Continuation {
     fun <T : Any> execBlock(
         key: String,
-        clazz: KClass<out T>, // can I get rid of this?
+        clazz: KClass<out T>,
         block: (ctx: ContinuationContext) -> T,
         ctx: ContinuationContext
     ): T
 
     fun <T : Any> execBlock(
         key: String,
-        clazz: KClass<out T>, // can I get rid of this?
+        clazz: KClass<out T>,
         block: (ctx: ContinuationContext) -> T
     ): T {
         return execBlock(key, clazz, block, ContinuationContext())

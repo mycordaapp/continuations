@@ -34,3 +34,10 @@ interface ContinuableWorker {
     fun exception(id: ContinuationId): ExceptionInfo
     fun status(id: ContinuationId): ContinuationStatus
 }
+
+/**
+ * Optional interface that gives access to the state of the Threads
+ */
+interface ContinuableWorkerThreadMonitor {
+    fun threadId(id: ContinuationId): Long
+}

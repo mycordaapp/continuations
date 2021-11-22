@@ -2,10 +2,8 @@ package mycorda.app.continuations
 
 import mycorda.app.chaos.Chaos
 import mycorda.app.continuations.simple.SimpleContinuationRegistrar
-import mycorda.app.registry.Registrar
 import mycorda.app.registry.Registry
 import mycorda.app.xunitpatterns.spy.Spy
-
 
 class ThreeSteps(
     registry: Registry = SimpleContinuationRegistrar().register(),
@@ -22,15 +20,15 @@ class ThreeSteps(
     override fun exec(input: Int): Int {
         testDecoration("starting")
         // run a sequence of calculations
-        val step1Result = continuation.execBlock("step1", 1::class) {
+        val step1Result = continuation.execBlock("step1", Int::class) {
             testDecoration("step1")
             input * input
         }
-        val step2Result = continuation.execBlock("step2", 1::class) {
+        val step2Result = continuation.execBlock("step2", Int::class) {
             testDecoration("step2")
             step1Result + 1
         }
-        return continuation.execBlock("step3", 1::class) {
+        return continuation.execBlock("step3", Int::class) {
             testDecoration("step3")
             step2Result + step2Result
         }
@@ -43,13 +41,6 @@ class ThreeSteps(
     }
 }
 
-
-//class TestSupportRegistrar : Registrar {
-//    override fun register(registry: Registry, strict: Boolean): Registry {
-//        registry
-//    }
-//
-//}
 
 class TestSupportRegistrations : ContinuableRegistrations {
     override fun iterator(): Iterator<ContinuableRegistration> {

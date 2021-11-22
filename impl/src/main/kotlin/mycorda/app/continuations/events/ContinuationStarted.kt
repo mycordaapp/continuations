@@ -4,13 +4,21 @@ import mycorda.app.continuations.ContinuationId
 import mycorda.app.ses.Event
 import mycorda.app.ses.EventFactory
 
+data class ContinuationStarted(
+    val continuationIdAsString: String,
+    val threadId: Long
+) {
+    constructor(continuationId: ContinuationId, threadId: Long) : this(continuationId.toString(), threadId)
+}
+
 object ContinuationStartedFactory : EventFactory {
 
-    fun create(continuationId: ContinuationId): Event {
+    fun create(payload: ContinuationStarted): Event {
 
         return Event(
             type = eventType(),
-            aggregateId = continuationId.toString()
+            aggregateId = payload.continuationIdAsString,
+            payload = payload
         )
     }
 

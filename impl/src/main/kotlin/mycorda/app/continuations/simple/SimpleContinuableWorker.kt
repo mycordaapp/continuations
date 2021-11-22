@@ -5,6 +5,7 @@ import mycorda.app.continuations.*
 import mycorda.app.continuations.events.*
 import mycorda.app.registry.Registry
 import mycorda.app.ses.AggregateIdQuery
+import mycorda.app.ses.AllOfQuery
 import mycorda.app.ses.EventStore
 import mycorda.app.ses.EventWriter
 import mycorda.app.sks.SKS
@@ -16,12 +17,12 @@ import java.lang.RuntimeException
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
-class SimpleContinuableWorker(registry: Registry) : ContinuableWorker {
+class SimpleContinuableWorker(registry: Registry) : ContinuableWorker, ContinuableWorkerThreadMonitor {
     private val factory = registry.get(ContinuableFactory::class.java)
     private val schedule = ArrayList<Schedule<Any>>()
-    private val executorService = Executors.newFixedThreadPool(10)
     private val es = registry.get(EventStore::class.java)
     private val kv = registry.get(SimpleKVStore::class.java)
+    private val executorService = Executors.newFixedThreadPool(10)
 
     init {
         thread(start = true, block = monitorThread())
@@ -51,7 +52,7 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker {
 
     override fun <O> result(id: ContinuationId): O {
         if (status(id) == ContinuationStatus.Completed) {
-            return kv.getDeserialised<O>(UniqueId(id.id()))
+            return kv.getDeserialised(UniqueId(id.id()))
         } else {
             throw RuntimeException("No result available")
         }
@@ -108,6 +109,15 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker {
             PlatformTimer.sleepForTicks(1)
         }
     }
+
+    override fun threadId(id: ContinuationId): Long {
+        val events = es.read(AllOfQuery(listOf(AggregateIdQuery(id.id()), ContinuationStartedFactory.typeFilter())))
+        if (events.isNotEmpty()) {
+            return (events.last().payload as ContinuationStarted).threadId
+        }
+        throw RuntimeException("No threadId available for ContinuationId: $id")
+    }
+
 }
 
 class WorkerThread(
@@ -123,7 +133,7 @@ class WorkerThread(
         try {
             Thread.currentThread().name = "WorkerThread - $continuable - $id";
             val continuation = factory.createInstance<Any, Any>(continuable, id)
-            ew.store(ContinuationStartedFactory.create(id))
+            ew.store(ContinuationStartedFactory.create(ContinuationStarted(id, Thread.currentThread().id)))
             val result = continuation.exec(input)
             kv.put(UniqueId(id.id()), SKSValue(result, SKSValueType.Serialisable))
             ew.store(ContinuationCompletedFactory.create(id))
@@ -139,5 +149,4 @@ class WorkerThread(
             ew.store(ContinuationFailedFactory.create(id, t))
         }
     }
-
 }
