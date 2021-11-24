@@ -44,7 +44,7 @@ data class ContinuationInfo(
  * The minimum services any Worker should expose 
  */
 interface ContinuableWorker {
-
+    fun startup()
     fun <T> schedule(scheduled: Schedule<T>)
     fun <O> result(id: ContinuationId): O
     fun exception(id: ContinuationId): ExceptionInfo

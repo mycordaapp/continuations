@@ -25,6 +25,30 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker, Continuab
         thread(start = true, block = monitorThread())
     }
 
+    override fun startup() {
+        // todo - thread startup should be within this method for cleaner
+        //        recovery
+
+        continuations().forEach {
+            if (status(it) == ContinuationStatus.Running) {
+                val ev =
+                    es.read(AllOfQuery(listOf(AggregateIdQuery(it.id()), ScheduledActionCreatedFactory.typeFilter())))
+                        .single()
+
+                val input = kv.get(UniqueId(it.toString() + ":input"))
+
+                val payload = ev.payload as ScheduledActionCreated
+                this.schedule.add(
+                    Schedule(
+                        payload.clazzName, it,
+                        input.value, System.currentTimeMillis()
+                    )
+                )
+            }
+        }
+
+    }
+
     override fun <T> schedule(scheduled: Schedule<T>) {
         this.schedule(
             scheduled.continuableName,
@@ -138,14 +162,16 @@ class WorkerThread(
         try {
             Thread.currentThread().name = "WorkerThread - $continuable - $id";
             val continuation = factory.createInstance<Any, Any>(continuable, id)
+            kv.put(UniqueId(id.id() + ":input"), SKSValue(input, SKSValueType.Serialisable))
             ew.store(ContinuationStartedFactory.create(ContinuationStarted(id, Thread.currentThread().id)))
             val result = continuation.exec(input)
             kv.put(UniqueId(id.id()), SKSValue(result, SKSValueType.Serialisable))
             ew.store(ContinuationCompletedFactory.create(id))
         } catch (ie: InterruptedException) {
-            // should we have custom logic for the thread problems ?
-            kv.put(UniqueId(id.id()), SKSValue(ExceptionInfo(ie), SKSValueType.Serialisable))
-            ew.store(ContinuationFailedFactory.create(id, ie))
+            // todo - we should be pushing these back in for reprocessing
+
+            //kv.put(UniqueId(id.id()), SKSValue(ExceptionInfo(ie), SKSValueType.Serialisable))
+            //ew.store(ContinuationFailedFactory.create(id, ie))
         } catch (ex: Exception) {
             kv.put(UniqueId(id.id()), SKSValue(ExceptionInfo(ex), SKSValueType.Serialisable))
             ew.store(ContinuationFailedFactory.create(id, ex))

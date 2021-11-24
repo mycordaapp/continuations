@@ -6,6 +6,8 @@ import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import mycorda.app.chaos.AlwaysFail
 import mycorda.app.chaos.Chaos
+import mycorda.app.chaos.DelayUptoNTicks
+import mycorda.app.clock.PlatformTick
 import mycorda.app.clock.PlatformTimer
 import mycorda.app.continuations.events.ContinuationCompletedFactory
 import mycorda.app.continuations.events.ContinuationFailedFactory
@@ -14,6 +16,8 @@ import mycorda.app.continuations.simple.SimpleContinuableWorker
 import mycorda.app.continuations.simple.SimpleContinuationRegistrar
 import mycorda.app.registry.Registry
 import mycorda.app.ses.*
+import org.junit.Ignore
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.lang.RuntimeException
 
@@ -45,7 +49,6 @@ class SimpleContinuationWorkerTest {
         assertThat(worker.status(id), equalTo(ContinuationStatus.Completed))
         assertThat(worker.result<Int>(id), equalTo(202))
         assertThat(worker.continuations().toList(), equalTo(listOf(id)))
-
     }
 
     @Test
@@ -69,7 +72,7 @@ class SimpleContinuationWorkerTest {
     }
 
     @Test
-    fun `should expose internal threading `() {
+    fun `should expose internal threading`() {
         val (registry, es) = setupServices()
 
         val (worker, id, schedule) = scheduleContinuable(registry)
@@ -84,6 +87,65 @@ class SimpleContinuationWorkerTest {
         assert(monitor.threadId(id) != 0L)
     }
 
+    @Test
+    @Disabled
+    fun `should recover on restart`() {
+        // This test simulates a process restart by killing a thread while
+        // the continuation is running. We then restart the continuation
+        // and check it runs successfully until completion. Finally we test
+        // the events emitted to confirm they meet our expectations
+
+        val (registry, es) = setupServices { registry ->
+            registry.store(
+                Chaos(
+                    mapOf(
+                        "step1" to listOf(
+                            // inject enough delay to ensure we kill the thread BEFORE
+                            // the continuation has has a chance to complete
+                            DelayUptoNTicks(
+                                minDelay = PlatformTick.of(3),
+                                maxDelay = PlatformTick.of(5)
+                            )
+                        )
+                    ), true
+                )
+            )
+            //registry.store(FailImmediatelyExceptionStrategy())
+        }
+
+        val (worker, id, schedule) = scheduleContinuable(registry)
+        val monitor = worker as ContinuableWorkerThreadMonitor
+
+        // Start the worker
+        assertThat({ monitor.threadId(id) }, throws<RuntimeException>())
+        worker.schedule(schedule)
+        es.pollForEvent(
+            AllOfQuery(listOf(AggregateIdQuery(id.id()), ContinuationStartedFactory.typeFilter()))
+        )
+
+        // kill the thread
+        val threadId = monitor.threadId(id)
+        Thread.getAllStackTraces().keys.forEach {
+            if (it.id == threadId) {
+               it.interrupt()
+            }
+        }
+        // should stay in running state even if we have given the
+        // original thread time to complete
+        //assertThat(worker.status(id), equalTo(ContinuationStatus.Running))
+        Thread.sleep(1000)   // Platform Timer doesn't seem to be working reliably here
+
+        println("all events")
+        es.read(EverythingQuery).forEach {
+            println(it.type)
+        }
+        assertThat(worker.status(id), equalTo(ContinuationStatus.Running))
+
+
+        //assert(monitor.threadId(id) != 0L)
+    }
+
+
     private fun setupServices(beforeBlock: (registry: Registry) -> Unit = {}): Pair<Registry, EventStore> {
         val registry = Registry()
         beforeBlock.invoke(registry)
@@ -91,7 +153,7 @@ class SimpleContinuationWorkerTest {
         val es = registry.get(EventStore::class.java)
         val factory = registry.get(ContinuableFactory::class.java)
         factory.register(TestSupportRegistrations())
-        factory.createInstance(ThreeSteps::class)  // force class loader cost BEFORE threads start as its slow
+        factory.createInstance(ThreeSteps::class)  // force class loader cost BEFORE threads start as it is slow
         return Pair(registry, es)
     }
 
