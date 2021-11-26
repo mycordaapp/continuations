@@ -5,10 +5,10 @@
 
 ## What it does
 
-A vaguely [continuations](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-continuation/) style concept
+A [continuations](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-continuation/) style concept
 but designed to operate at cloud scale. So we resume a process, somewhere on the cloud.
 
-This is written to support [Tasks](https://github.com/mycordaapp/tasks) however the concept is sufficiently simple and
+While this is written to support [Tasks](https://github.com/mycordaapp/tasks) the concept is sufficiently simple and
 standalone that it can have its own repo.
 
 ## Design

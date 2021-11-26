@@ -2,7 +2,7 @@ package mycorda.app.continuations
 
 /**
  * The core concept. A `Continuation` is `Continuable` if
- * it can be recalled
+ * it can be restarted.
  *
  * A `Continuable` must also implement a constructor with the signature:
  *     registry: Registry,
@@ -44,7 +44,15 @@ data class ContinuationInfo(
  * The minimum services any Worker should expose 
  */
 interface ContinuableWorker {
+    /**
+     * A hook for any startup processing, such as restarting running
+     * continuations
+     */
     fun startup()
+
+    /**
+     * Schedule a Continuable
+     */
     fun <T> schedule(scheduled: Schedule<T>)
     fun <O> result(id: ContinuationId): O
     fun exception(id: ContinuationId): ExceptionInfo

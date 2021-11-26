@@ -9,7 +9,7 @@ blocks) that are managed by the `Continuation`. If the method is restarted then 
 directly after the last successful step. The breakdown of the steps and the logic within steps is entirely a decision
 for developer, but in most cases Continuations will control processes that are subject to failure of some form.
 
-The simple example below explains it well. In the case we use
+The simple example below explains it well. In this case we use
 the [Chaos](https://github.com/mycordaapp/commons/blob/master/docs/chaos.md) library to inject failure conditions.
 
 ```kotlin
@@ -25,9 +25,10 @@ class ThreeSteps(
     private val chaos = registry.getOrElse(Chaos::class.java, Chaos(emptyMap(), true))
     private val spy = registry.getOrElse(Spy::class.java, Spy())
 
+    // #3. start the continuation 
     override fun exec(input: Int): Int {
         testDecoration("starting")
-        // #3. run a sequence of calculations
+        // #4. run a sequence of calculations
         val step1Result = continuation.execBlock("step1", Int::class) {
             testDecoration("step1")
             input * input
@@ -42,7 +43,7 @@ class ThreeSteps(
         }
     }
 
-    // #4 control and spy on the test double - wouldn't expect this in real code
+    // #5 control and spy on the test double - wouldn't expect this in real code
     private fun testDecoration(step: String) {
         spy.spy(step)
         chaos.chaos(step)
@@ -54,12 +55,14 @@ class ThreeSteps(
   factory. **The important point** is that for a given continuationId, the factory will return the state of the previous
   run, if there was run. The continuation doesn't need to know how the factory manages this. There is of course an
   implicit rule that only a single instance of a given continuation should be running at a point in time.
-* the `#2. setup internal test support` and `#4 control and spy on the test double` blocks are purely for testing, and
+* the `#2. setup internal test support` and `#5 control and spy on the test double` blocks are purely for testing, and
   wouldn't be in production code.
-* the `#3. run a sequence of calculations` block contains the sequence of continuations. The guarantee that the
-  continuation will provide is that if restarted with the same `continuationId`, it will silently skip any completed
-  steps, simply replacing the code block with the stored value from the earlier run. There is a limitation that the
-  store value must conform to the rules
+* the `#3. start the continuation` is the entry point to the continuation, defined in the `Continuable` interface. It is
+  simple function with a single input and output.
+* the `#4. run a sequence of calculations` block contains the sequence of steps (aka blocks) within the continuation.
+  The guarantee that the continuation will provide is that if restarted with the same `continuationId`, it will silently
+  skip any completed steps, simply replacing the code block with the stored value from the earlier run. There is a
+  limitation that the stored value must conform to the rules
   of [Really Simple Serialisation(rss)](https://github.com/mycordaapp/really-simple-serialisation#readme).
 
 The code snippets from the [Test Case](../impl/src/test/kotlin/mycorda/app/continuations/ContinuationScenarios.kt)
