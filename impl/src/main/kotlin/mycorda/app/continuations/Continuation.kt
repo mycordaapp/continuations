@@ -1,20 +1,11 @@
 package mycorda.app.continuations
 
-
+import mycorda.app.types.ExceptionInfo
+import mycorda.app.types.ExceptionInfoList
 import mycorda.app.types.UniqueId
 import java.lang.Exception
 import java.util.*
 import kotlin.reflect.KClass
-
-// are these good candidates for commons ?
-data class ExceptionInfo(val clazzName: String, val message: String) {
-    constructor(clazz: KClass<out Throwable>, message: String) : this(clazz.qualifiedName!!, message)
-    constructor(ex: Throwable) : this(ex::class, ex.message!!)
-}
-
-class ExceptionInfoList(data: List<ExceptionInfo>) : ArrayList<ExceptionInfo>(data) {
-    constructor() : this(emptyList())
-}
 
 data class ContinuationContext(
     /**

@@ -1,5 +1,7 @@
 package mycorda.app.continuations
 
+import mycorda.app.types.ExceptionInfo
+
 /**
  * The core concept. A `Continuation` is `Continuable` if
  * it can be restarted.

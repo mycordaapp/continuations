@@ -9,6 +9,7 @@ import mycorda.app.sks.SKS
 import mycorda.app.sks.SKSValue
 import mycorda.app.sks.SKSValueType
 import mycorda.app.sks.SimpleKVStore
+import mycorda.app.types.ExceptionInfo
 import mycorda.app.types.UniqueId
 import java.lang.RuntimeException
 import java.util.concurrent.Executors

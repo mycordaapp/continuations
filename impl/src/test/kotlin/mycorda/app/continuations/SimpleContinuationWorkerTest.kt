@@ -16,6 +16,7 @@ import mycorda.app.continuations.simple.SimpleContinuableWorker
 import mycorda.app.continuations.simple.SimpleContinuationRegistrar
 import mycorda.app.registry.Registry
 import mycorda.app.ses.*
+import mycorda.app.types.ExceptionInfo
 import org.junit.Ignore
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
