@@ -33,8 +33,23 @@ data class ContinuationInfo(
     } else null
 )
 
+interface ScheduleContinuable {
+
+    /**
+     * Schedule a Continuable
+     */
+    fun <T> schedule(scheduled: Schedule<T>)
+
+
+    /**
+     * Retrieve the result of the continuation
+     */
+    fun <O> result(id: ContinuationId): O
+    fun exception(id: ContinuationId): ExceptionInfo
+    fun status(id: ContinuationId): ContinuationStatus
+}
 /**
- * The minimum services any Worker should expose
+ * The minimum services any Worker should expose.
  */
 interface ContinuableWorker {
     /**
@@ -47,6 +62,11 @@ interface ContinuableWorker {
      * Schedule a Continuable
      */
     fun <T> schedule(scheduled: Schedule<T>)
+
+
+    /**
+     * Retrieve the result of the continuation
+     */
     fun <O> result(id: ContinuationId): O
     fun exception(id: ContinuationId): ExceptionInfo
     fun status(id: ContinuationId): ContinuationStatus

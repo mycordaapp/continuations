@@ -30,11 +30,19 @@ This library solves some basic problems with distributed computing:
 
 ## Basic Principles
 
-### `Continuation` - restartable code
+### `Continuation`
 
-See [Continuations](./docs/continuations.md) for details
+The three core interface are [Continuation](./impl/src/main/kotlin/mycorda/app/continuations/Continuation.kt),
+[Continuable](./impl/src/main/kotlin/mycorda/app/continuations/Continuable.kt)
+and [Continuable Worker]((./impl/src/main/kotlin/mycorda/app/continuations/ContinuableWorker.kt)).
 
-### `Simple Continuation` - an implementation of Continuation
+The application logic is implemented as a `Continuation`. The ability to start and restart is implemented
+by `Continuable`. The ability to schedule , check progress and get the result of a `Continuation` is implemented by
+the `ContinuationWorker` interface.
+
+See the [docs](./docs/continuations.md) for details.
+
+### `Simple Continuation`
 
 ### `Worker`
 
@@ -47,7 +55,11 @@ As with everything in [myCorda dot App](https://mycorda.app), this library has m
 * The object [Registry](https://github.com/mycordaapp/registry#readme)
 * The [Commons](https://github.com/mycordaapp/commons#readme) module
 * The [Really Simple Serialisation(rss)](https://github.com/mycordaapp/really-simple-serialisation#readme) module
-    - [Jackson](https://github.com/FasterXML/jackson) for JSON serialisation
+    - [Jackson](https://github.com/FasterXML/jackson) for JSON and YAML serialisation
+* [Simple Event Store](https://github.com/mycordaapp/simple-event-store) and
+  [Simple KV Store](https://github.com/mycordaapp/simple-kv-store) if using the
+  inbuilt [Simple Continuation](./impl/src/main/kotlin/mycorda/app/continuations/simple/SimpleContinuation.kt)
 
 ## Next Steps
 
+_todo_

@@ -10,11 +10,11 @@ simplifying assumptions, the design is expected to be suitable for most producti
 The following design decisions have been taken:
 
 * all components are wired using the registry
-* all state is stored in the event store, and the key-value store.
+* all state is stored in the [event store](https://github.com/mycordaapp/simple-event-store) , and
+  the [key-value store](https://github.com/mycordaapp/simple-kv-store).
 * exceptions and retries and handled within the `SimpleContinuation`
 * worker logic is implemented using a blocking pattern with a thread pool. Obviously this has implication on overall
   scalability and latency, but is felt to be more that adequate for all foreseeable usage patterns.
-
 
 ## Exceptions and Retries
 
