@@ -55,7 +55,7 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker, Continuab
             scheduled.continuableName,
             scheduled.id,
             scheduled.input,
-            scheduled.time
+            scheduled.startTime
         )
     }
 
@@ -121,7 +121,7 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker, Continuab
         while (true) {
             synchronized(this) {
                 val now = System.currentTimeMillis()
-                val ready = schedule.filter { it.time <= now }
+                val ready = schedule.filter { it.startTime <= now }
 
                 ready.forEach {
                     val runnable: Runnable = WorkerThread(
