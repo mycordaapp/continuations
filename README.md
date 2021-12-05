@@ -34,7 +34,7 @@ This library solves some basic problems with distributed computing:
 
 The three core interface are [Continuation](./impl/src/main/kotlin/mycorda/app/continuations/Continuation.kt),
 [Continuable](./impl/src/main/kotlin/mycorda/app/continuations/Continuable.kt)
-and [Continuable Worker]((./impl/src/main/kotlin/mycorda/app/continuations/ContinuableWorker.kt)).
+and [Continuable Worker](./impl/src/main/kotlin/mycorda/app/continuations/ContinuableWorker.kt).
 
 The application logic is implemented as a `Continuation`. The ability to start and restart is implemented
 by `Continuable`. The ability to schedule , check progress and get the result of a `Continuation` is implemented by
