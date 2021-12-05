@@ -1,8 +1,19 @@
-# Simple Continuation 
+# Simple Continuation
 
 [home](../README.md)
 
-TODO - describe the SimpleContinuation logic 
+## Introduction
+
+`SimpleContinuation` provides a complete implementation of `Continuation` and `Continuable`. While there are a number of
+simplifying assumptions, the design is expected to be suitable for most production scenarios.
+
+The following design decisions have been taken:
+
+* all components are wired using the registry
+* all state is stored in the event store, and the key-value store.
+* exceptions and retries and handled within the `SimpleContinuation`
+* worker logic is implemented using a blocking pattern with a thread pool. Obviously this has implication on overall
+  scalability and latency, but is felt to be more that adequate for all foreseeable usage patterns.
 
 
 ## Exceptions and Retries

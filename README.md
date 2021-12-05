@@ -5,15 +5,15 @@
 
 ## What it does
 
-A [continuations](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-continuation/) style concept
-but designed to operate at cloud scale. So we resume a process, somewhere on the cloud.
+A [continuations](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-continuation/) style concept but
+designed to operate at cloud scale. So we resume a process, somewhere on the cloud.
 
 While this is written to support [Tasks](https://github.com/mycordaapp/tasks) the concept is sufficiently simple and
 standalone that it can have its own repo.
 
-## Design
+## Rationale
 
-This library needs to solve three basic problems:
+This library solves some basic problems with distributed computing:
 
 - restarting
     - checkpointing (where was the process last time)
@@ -28,7 +28,15 @@ This library needs to solve three basic problems:
     - when to restart (scheduling)
     - when to give up (dead letter)
 
+## Basic Principles
+
+### `Continuation` - restartable code
+
 See [Continuations](./docs/continuations.md) for details
+
+### `Simple Continuation` - an implementation of Continuation
+
+### `Worker`
 
 ## Dependencies
 

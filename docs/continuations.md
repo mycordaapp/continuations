@@ -96,7 +96,6 @@ fun `should return result of previous run if rerun`() {
     assertThat(result2, equalTo(202))
     assertThat(spy2.secrets(), equalTo(listOf("starting")))
 }
-
 ```
 
 ## Running Continuations with retry / error handling
@@ -105,13 +104,13 @@ Continuations are required to solve two fundamental problems for stateful system
 container :
 
 * what happens if a block fails? Should the code give up or retry? And, if it is retrying, what is the strategy for
-  selecting delays and when to finally give up retrying
+  selecting delays and when to finally give up retrying?
 * what happens if the process running the continuation stops? Either due to a system failure or a restart issued by an
-  orchestrator such as Kubernetes
+  orchestrator such as Kubernetes?
 
 The first problem can be handled either within the continuation logic (so the continuation itself does not fail)
 or by treating the failure as a failure of the entire process. The first approach feels better and is supported by
-the [Simple Continuation](./simple-continuation.md).
+the [Simple Continuation](./simple-continuation.md), however either strategy may be applied.
 
 The second problem requires something that can be started / restarted and something to do the starting / restarting. The
 ability to start is defined by the `Continuable` interface, and the ability to manage the starting is defined by
@@ -121,11 +120,12 @@ the `ContinuableWorker` interface.
 
 ## Serialisation
 
-TODO - Some notes on rss
+There is design assumption that any data stored must conform to rules
+of [Really Simple Serialisation(rss)](https://github.com/mycordaapp/really-simple-serialisation#readme).
 
 ## Upgrades
 
 _TODO - note on how to manage upgrades unlike Corda flows, this should be possible; there is no fancy serialisation
 logic and upgrade specific behaviour can be injected_
 
-_But need to work through the scenarios_
+_But need to work through the scenarios -should have its own section_
