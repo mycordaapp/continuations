@@ -2,7 +2,6 @@ package mycorda.app.continuations
 
 import mycorda.app.types.ExceptionInfo
 
-
 /**
  * Schedule a new `Continuable` to run.
  */
@@ -13,6 +12,9 @@ data class Schedule<T>(
     val startTime: Long = System.currentTimeMillis()
 )
 
+/**
+ * The possible states for a Continuation
+ */
 enum class ContinuationStatus {
     UnknownContinuation,
     NotStarted,
@@ -39,37 +41,39 @@ interface ScheduleContinuable {
      * Schedule a Continuable
      */
     fun <T> schedule(scheduled: Schedule<T>)
+}
 
-
+interface QueryContinuable {
     /**
-     * Retrieve the result of the continuation
+     * Retrieve the result of the continuation. Only valid is the status is `Completed`
      */
     fun <O> result(id: ContinuationId): O
+
+    /**
+     * Retrieve the exception. Only valid is status is `Failed`
+     */
     fun exception(id: ContinuationId): ExceptionInfo
+
+    /**
+     * Retrieve the status
+     */
     fun status(id: ContinuationId): ContinuationStatus
+
+    /**
+     *
+     */
+    fun info(id: ContinuationId): ContinuationInfo
 }
+
+interface ServiceLifeCycle {
+    fun startup()
+    fun shutdown()
+}
+
 /**
  * The minimum services any Worker should expose.
  */
-interface ContinuableWorker {
-    /**
-     * A hook for any startup processing, such as restarting running
-     * continuations
-     */
-    fun startup()
-
-    /**
-     * Schedule a Continuable
-     */
-    fun <T> schedule(scheduled: Schedule<T>)
-
-
-    /**
-     * Retrieve the result of the continuation
-     */
-    fun <O> result(id: ContinuationId): O
-    fun exception(id: ContinuationId): ExceptionInfo
-    fun status(id: ContinuationId): ContinuationStatus
+interface ContinuableWorker : ScheduleContinuable, QueryContinuable, ServiceLifeCycle {
     fun continuations(): Iterable<ContinuationId>
 }
 

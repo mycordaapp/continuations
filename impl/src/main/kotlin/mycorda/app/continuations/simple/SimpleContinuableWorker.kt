@@ -50,6 +50,10 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker, Continuab
 
     }
 
+    override fun shutdown() {
+        TODO("Not yet implemented")
+    }
+
     override fun <T> schedule(scheduled: Schedule<T>) {
         this.schedule(
             scheduled.continuableName,
@@ -107,6 +111,10 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker, Continuab
             }
         }
         return status
+    }
+
+    override fun info(id: ContinuationId): ContinuationInfo {
+        TODO("Not yet implemented")
     }
 
     override fun continuations(): Iterable<ContinuationId> {

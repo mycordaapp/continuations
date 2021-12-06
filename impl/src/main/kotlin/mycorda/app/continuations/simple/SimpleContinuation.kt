@@ -1,6 +1,5 @@
 package mycorda.app.continuations.simple
 
-
 import mycorda.app.continuations.*
 import mycorda.app.continuations.events.ScheduledActionCreatedFactory
 import mycorda.app.registry.Registrar
