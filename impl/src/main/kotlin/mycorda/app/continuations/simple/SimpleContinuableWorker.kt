@@ -117,12 +117,12 @@ class SimpleContinuableWorker(registry: Registry) : ContinuableWorker, Continuab
         TODO("Not yet implemented")
     }
 
-    override fun continuations(): Iterable<ContinuationId> {
+    override fun continuations(): ContinuationIdList {
         val pattern = LikeString("mycorda.app.continuations.events.%")
-        return es.read(LikeEventTypeQuery(pattern))
+        return ContinuationIdList(es.read(LikeEventTypeQuery(pattern))
             .map { it.aggregateId }
             .distinct()
-            .map { ContinuationId.fromString(it!!) }
+            .map { ContinuationId.fromString(it!!) })
     }
 
     private fun monitorThread(): () -> Unit = {
@@ -190,3 +190,4 @@ class WorkerThread(
         }
     }
 }
+

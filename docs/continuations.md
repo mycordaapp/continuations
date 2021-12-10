@@ -1,4 +1,5 @@
 # Continuation
+
 [home](../README.md) | [docs](./index.md)
 
 ## What is a Continuation ?
@@ -6,7 +7,7 @@
 A `Continuation` is simply an injectable service that allows the developer to break a method into 1 or more steps (code
 blocks) that are managed by the `Continuation`. If the method is restarted then the Continuation logic will continue
 directly after the last successful step. The breakdown of the steps and the logic within steps is entirely a decision
-for developer, but in most cases Continuations will control processes that are subject to failure of some form.
+for the developer, but in most cases Continuations will control processes that are subject to failure of some form.
 
 The simple example below explains it well. In this case we use
 the [Chaos](https://github.com/mycordaapp/commons/blob/master/docs/chaos.md) library to inject failure conditions.
@@ -52,7 +53,7 @@ class ThreeSteps(
 
 * the `#1. setup continuations` block is more or less boiler-plate code. The class retrieves its `Continuation` via the
   factory. **The important point** is that for a given continuationId, the factory will return the state of the previous
-  run, if there was run. The continuation doesn't need to know how the factory manages this. There is of course an
+  run, if there was one. The continuation doesn't need to know how the factory manages this. There is of course an
   implicit rule that only a single instance of a given continuation should be running at a point in time.
 * the `#2. setup internal test support` and `#5 control and spy on the test double` blocks are purely for testing, and
   wouldn't be in production code.

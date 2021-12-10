@@ -4,6 +4,7 @@ import mycorda.app.types.ExceptionInfo
 import mycorda.app.types.ExceptionInfoList
 import mycorda.app.types.UniqueId
 import java.lang.Exception
+import java.lang.RuntimeException
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -24,7 +25,11 @@ data class ContinuationContext(
  * A type safe Id associated with a continuation. Currently it is
  * internally just a UUID, but this could change
  */
-class ContinuationId private constructor(private val id: String) {
+data class ContinuationId(val id: String) {
+    init {
+        UUID.fromString(id) // checks it a UUID Id
+    }
+
     fun id(): String = id
 
     fun toUniqueId(): UniqueId = UniqueId(id())
@@ -33,7 +38,7 @@ class ContinuationId private constructor(private val id: String) {
         fun random(): ContinuationId = ContinuationId(UUID.randomUUID().toString())
 
         fun fromString(id: String): ContinuationId {
-            UUID.fromString(id) // checks it a UUID Id
+            //UUID.fromString(id) // checks it a UUID Id
             return ContinuationId(id)
         }
 

@@ -41,6 +41,13 @@ interface ScheduleContinuable {
     fun <T> schedule(scheduled: Schedule<T>)
 }
 
+
+class ContinuationIdList(data: List<ContinuationId>) : ArrayList<ContinuationId>(data)
+
+interface QueryContinuables {
+    fun continuations(): ContinuationIdList
+}
+
 interface QueryContinuable {
     /**
      * Retrieve the result of the continuation. Only valid is the status is `Completed`
@@ -71,14 +78,18 @@ interface ServiceLifeCycle {
 /**
  * The minimum services any Worker should expose.
  */
-interface ContinuableWorker : ScheduleContinuable, QueryContinuable, ServiceLifeCycle {
-    fun continuations(): Iterable<ContinuationId>
-}
+interface ContinuableWorker : ScheduleContinuable, QueryContinuable, QueryContinuables, ServiceLifeCycle
+
+/**
+ * The client side of a Worker should expose.
+ */
+interface ContinuableWorkerClient : ScheduleContinuable, QueryContinuable, QueryContinuables
 
 /**
  * Optional interface that gives access to the state of the Threads.
- * Is this is good idea - its really only for testing
+ * TODO: Is this is good idea?? - its really only for testing
  */
 interface ContinuableWorkerThreadMonitor {
     fun threadId(id: ContinuationId): Long
 }
+
