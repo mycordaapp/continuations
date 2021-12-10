@@ -1,4 +1,7 @@
-# The "Continuations" framework
+# The "Continuations" toolkit
+
+[![Circle CI](https://circleci.com/gh/mycordaapp/continuations.svg?style=shield)](https://circleci.com/gh/mycordaapp/continuations)
+[![Licence Status](https://img.shields.io/github/license/mycordaapp/continuations)](https://github.com/mycordaapp/continuations/blob/master/licence.txt)
 
 [home](../README.md)
 
