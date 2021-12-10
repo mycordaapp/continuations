@@ -1,7 +1,6 @@
 # The "Continuations" framework
 
-[![Circle CI](https://circleci.com/gh/mycordaapp/continuations.svg?style=shield)](https://circleci.com/gh/mycordaapp/continuations)
-[![Licence Status](https://img.shields.io/github/license/mycordaapp/continuations)](https://github.com/mycordaapp/continuations/blob/master/licence.txt)
+[home](../README.md)
 
 ## What it does
 
@@ -30,9 +29,7 @@ This library solves some basic problems with distributed computing:
 
 ## Basic Principles
 
-### `Continuation`
-
-The three core interface are [Continuation](./impl/src/main/kotlin/mycorda/app/continuations/Continuation.kt),
+The three core interfaces are [Continuation](./impl/src/main/kotlin/mycorda/app/continuations/Continuation.kt),
 [Continuable](./impl/src/main/kotlin/mycorda/app/continuations/Continuable.kt)
 and [Continuable Worker](./impl/src/main/kotlin/mycorda/app/continuations/ContinuableWorker.kt).
 
@@ -40,11 +37,11 @@ The application logic is implemented as a `Continuation`. The ability to start a
 by `Continuable`. The ability to schedule , check progress and get the result of a `Continuation` is implemented by
 the `ContinuationWorker` interface.
 
-See the [docs](./docs/continuations.md) for details.
+See the [docs](./docs/index.md) for details.
 
-### `Simple Continuation`
+## Next Steps
 
-### `Worker`
+_todo_
 
 ## Dependencies
 
@@ -60,6 +57,3 @@ As with everything in [myCorda dot App](https://mycorda.app), this library has m
   [Simple KV Store](https://github.com/mycordaapp/simple-kv-store) if using the
   inbuilt [Simple Continuation](./impl/src/main/kotlin/mycorda/app/continuations/simple/SimpleContinuation.kt)
 
-## Next Steps
-
-_todo_

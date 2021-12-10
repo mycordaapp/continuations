@@ -1,6 +1,5 @@
 # Continuation
-
-[home](../README.md)
+[home](../README.md) | [docs](./index.md)
 
 ## What is a Continuation ?
 

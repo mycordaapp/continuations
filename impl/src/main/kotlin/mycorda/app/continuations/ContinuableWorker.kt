@@ -23,7 +23,6 @@ enum class ContinuationStatus {
     Failed
 }
 
-
 data class ContinuationInfo(
     val id: ContinuationId,
     val status: ContinuationStatus,
@@ -36,7 +35,6 @@ data class ContinuationInfo(
 )
 
 interface ScheduleContinuable {
-
     /**
      * Schedule a Continuable
      */
@@ -60,7 +58,7 @@ interface QueryContinuable {
     fun status(id: ContinuationId): ContinuationStatus
 
     /**
-     *
+     * Retrieve the status
      */
     fun info(id: ContinuationId): ContinuationInfo
 }
@@ -78,7 +76,8 @@ interface ContinuableWorker : ScheduleContinuable, QueryContinuable, ServiceLife
 }
 
 /**
- * Optional interface that gives access to the state of the Threads
+ * Optional interface that gives access to the state of the Threads.
+ * Is this is good idea - its really only for testing
  */
 interface ContinuableWorkerThreadMonitor {
     fun threadId(id: ContinuationId): Long
